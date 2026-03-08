@@ -9,11 +9,11 @@ import os
 
 load_dotenv()
 
-llm = AzureChatOpenAI(azure_endpoint=os.getenv("ENDPOINT"),
-                      azure_deployment=os.getenv("DEPLOYMENT_ID"),
-                      api_version=os.getenv("API_VERSION"),
-                      api_key=os.getenv("API_KEY"))
-
+llm = AzureChatOpenAI(azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+                      azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
+                      api_version=os.getenv("OPENAI_API_VERSION"),
+                      api_key=os.getenv("AZURE_OPENAI_API_KEY"))
+                      
 
 class MessageClassifier(BaseModel):
     message_type: Literal["python", "r", "vba"] = Field(
