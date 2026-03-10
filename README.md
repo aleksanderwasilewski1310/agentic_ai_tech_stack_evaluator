@@ -36,3 +36,50 @@ This is the fastest way to ensure environment consistency.
 1. **Build the image:**
    ```bash
    docker compose build
+    ```
+    
+2. **Run the interactive agent:**
+
+    ```Bash
+    docker run -it --env-file .env agentic_ai_tech_stack_evaluator-evaluator-agent
+    ```
+
+(Note: The -it flag is mandatory for interactive terminal sessions with the LLM agents.)
+
+### Local Installation
+1. **Clone & Install:**
+
+    ```Bash
+    git clone [https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator.git](https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator.git)
+    cd agentic_ai_tech_stack_evaluator
+    pip install -r requirements.txt
+    ```
+
+2. **Environment Configuration:**
+
+    Create a .env file with your Azure credentials:
+
+    ```Code
+    AZURE_OPENAI_ENDPOINT="your-endpoint"
+    AZURE_OPENAI_DEPLOYMENT_NAME="your-deployment"
+    AZURE_OPENAI_API_KEY="your-key"
+    OPENAI_API_VERSION="2024-08-01-preview"
+    ```
+
+## 🚦 Key Senior-Level Features
+
+Hypothesis-Driven Routing: The classifier evaluates business heuristics before routing, preventing "model hallucinations" in stack choice.
+
+Error-Resistant Design: Implementation of Pydantic models ensures the orchestrator never crashes due to unstructured LLM responses.
+
+Production Hygiene: Isolated environment via Docker, ready for CI/CD and cloud-native deployment.
+
+### 📈 Future Roadmap
+
+[ ] LangSmith Integration: Trace monitoring and latency tracking for enterprise-scale auditing.
+
+[ ] Groundedness Checks: Automated validation to prevent hallucinations in generated code snippets.
+
+[ ] Cloud-Native Deployment: Transitioning to Azure Container Instances (ACI).
+
+### Author: Aleksander Wasilewski – Senior Solutions Developer
