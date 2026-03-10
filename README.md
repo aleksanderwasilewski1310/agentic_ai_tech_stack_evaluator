@@ -33,12 +33,14 @@ The system follows a **Modular Router-Agent Architecture**:
 ### Running with Docker (Recommended)
 This is the fastest way to ensure environment consistency.
 
-1. **Build the image:**
-   ```bash
-   docker compose build
-    ```
+1. **Clone Repository**
     
-2. **Environment Configuration:**
+     ```Bash
+    git clone [https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator.git](https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator.git)
+    cd agentic_ai_tech_stack_evaluator
+    ```
+
+1. **Environment Configuration:**
 
     Create a .env file with your Azure credentials:
 
@@ -47,6 +49,11 @@ This is the fastest way to ensure environment consistency.
     AZURE_OPENAI_DEPLOYMENT_NAME="your-deployment"
     AZURE_OPENAI_API_KEY="your-key"
     OPENAI_API_VERSION="2024-08-01-preview"
+    ```
+
+2. **Build the image:**
+   ```bash
+   docker compose build
     ```
 
 3. **Run the interactive agent:**
@@ -58,7 +65,8 @@ This is the fastest way to ensure environment consistency.
 (Note: The -it flag is mandatory for interactive terminal sessions with the LLM agents.)
 
 ### Local Installation
-1. **Clone & Install:**
+
+1. **Clone & Install requirements:**
 
     ```Bash
     git clone [https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator.git](https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator.git)
@@ -75,6 +83,11 @@ This is the fastest way to ensure environment consistency.
     AZURE_OPENAI_DEPLOYMENT_NAME="your-deployment"
     AZURE_OPENAI_API_KEY="your-key"
     OPENAI_API_VERSION="2024-08-01-preview"
+    ```
+
+3. **Run the application:**
+    ```Bash
+    python main.py
     ```
 
 ## 🚦 Key Senior-Level Features
