@@ -38,10 +38,21 @@ This is the fastest way to ensure environment consistency.
    docker compose build
     ```
     
-2. **Run the interactive agent:**
+2. **Environment Configuration:**
+
+    Create a .env file with your Azure credentials:
+
+    ```Code
+    AZURE_OPENAI_ENDPOINT="your-endpoint"
+    AZURE_OPENAI_DEPLOYMENT_NAME="your-deployment"
+    AZURE_OPENAI_API_KEY="your-key"
+    OPENAI_API_VERSION="2024-08-01-preview"
+    ```
+
+3. **Run the interactive agent:**
 
     ```Bash
-    docker run -it --env-file .env agentic_ai_tech_stack_evaluator-evaluator-agent
+    docker run -it agentic_ai_tech_stack_evaluator-server
     ```
 
 (Note: The -it flag is mandatory for interactive terminal sessions with the LLM agents.)
