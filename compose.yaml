@@ -12,7 +12,7 @@ services:
     build: .
     stdin_open: true # Equivalent to -i
     tty: true        # Equivalent to -t
-    command: python main.pyservices:
+    command: python main.py
   server:
     build:
       context: .
