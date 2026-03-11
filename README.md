@@ -106,4 +106,4 @@ Production Hygiene: Isolated environment via Docker, ready for CI/CD and cloud-n
 
 [ ] Cloud-Native Deployment: Transitioning to Azure Container Instances (ACI).
 
-### Author: Aleksander Wasilewski – Senior Solutions Developer
+### Author: Aleksander Wasilewski
