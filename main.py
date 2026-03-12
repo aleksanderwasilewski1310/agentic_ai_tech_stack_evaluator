@@ -3,6 +3,7 @@ from typing import Annotated, Literal
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain_openai.chat_models import AzureChatOpenAI
+from modules.vectorizer import process_ai_response
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 import os
@@ -65,7 +66,7 @@ def python_agent(state: State):
 
     messages = [
         {"role": "system",
-         "content": """You are a Python Developer. Prepare a quick python solution for declared problem."""
+         "content": """You are a Python Developer. Prepare a quick python solution for declared problem. Put the code inside markdown."""
          },
         {
             "role": "user",
@@ -81,7 +82,7 @@ def r_agent(state: State):
 
     messages = [
         {"role": "system",
-         "content": """You are a R Developer. Prepare a quick R Script solution for declared problem."""
+         "content": """You are a R Developer. Prepare a quick R Script solution for declared problem. Put the code inside markdown."""
          },
         {
             "role": "user",
@@ -97,7 +98,7 @@ def vba_agent(state: State):
 
     messages = [
         {"role": "system",
-         "content": """You are a VBA Developer. Prepare a quick VBA Macro Solution for declared problem."""
+         "content": """You are a VBA Developer. Prepare a quick VBA Macro Solution for declared problem. Put the code inside markdown."""
          },
         {
             "role": "user",
@@ -107,6 +108,10 @@ def vba_agent(state: State):
     reply = llm.invoke(messages)
     return {"messages": [{"role": "assistant", "content": reply.content}]}
 
+def vectonize_code(state: State):
+    last_message = state["messages"][-1].content
+    vector = process_ai_response(last_message)
+    return {"messages": [{"role": "assistant", "content": str(vector)}]}
 
 graph_builder = StateGraph(State)
 
@@ -115,6 +120,7 @@ graph_builder.add_node("python", python_agent)
 graph_builder.add_node("r", r_agent)
 graph_builder.add_node("vba", vba_agent)
 graph_builder.add_node("router", router)
+graph_builder.add_node("vectonizer", vectonize_code)
 
 graph_builder.add_edge(START, "classifier")
 graph_builder.add_edge("classifier", "router")
@@ -123,9 +129,10 @@ graph_builder.add_conditional_edges(
     lambda state: state.get("next"),
     {"python": "python", "r": "r", "vba": "vba"}
 )
-graph_builder.add_edge("python", END)
-graph_builder.add_edge("r", END)
-graph_builder.add_edge("vba", END)
+graph_builder.add_edge("python", "vectonizer")
+graph_builder.add_edge("r", "vectonizer")
+graph_builder.add_edge("vba", "vectonizer")
+graph_builder.add_edge("vectonizer", END)
 
 graph = graph_builder.compile()
 
@@ -133,7 +140,7 @@ graph = graph_builder.compile()
 def run_chatbot():
     state = {"messages": [], "message_type": None}
     while True:
-        user_input = input("Message: ")
+        user_input = input("Message (type exit to close): ")
         if user_input == "exit":
             print("Bye")
             return ""
@@ -142,9 +149,10 @@ def run_chatbot():
             "messages", []) + [{"role": "user", "content": user_input}]
         state = graph.invoke(state)
         if state.get("messages") and len(state["messages"]) > 0:
-            last_message = state["messages"][-1]
+            solution_message = state["messages"][-2].content
+            vector = state["messages"][-1].content
             print(
-                f'\nState: {state.get("message_type")} Assistant: {last_message.content}')
+                f'\nState: {state.get("message_type")} Soluton: {solution_message} Vector: {vector}')
 
 
 print(graph.get_graph().draw_ascii())
