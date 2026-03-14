@@ -82,7 +82,9 @@ This is the fastest way to ensure environment consistency.
     AZURE_OPENAI_ENDPOINT="your-endpoint"
     AZURE_OPENAI_DEPLOYMENT_NAME="your-deployment"
     AZURE_OPENAI_API_KEY="your-key"
-    OPENAI_API_VERSION="2024-08-01-preview"
+    EMBEDDING_DEPLOYMENT_NAME="your_embedding_deployment_name"
+    EMBEDDING_API_VERSION="your_embedding_api_version"
+    OPENAI_API_VERSION="your_open_ai_api_version"
     ```
 
 3. **Run the application:**
