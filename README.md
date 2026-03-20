@@ -25,8 +25,110 @@ An orchestrator agent:
 2. Routes tasks to specialized agents (VBA / Python / R)
 3. Evaluates trade-offs (complexity, scalability, maintainability)
 4. Returns a structured recommendation + generated code
-5. 
 ---
+
+### ✨ Usage Example
+* User Input:
+  ```bash
+Please develop a robust, scriptable solution to automate the update of 5,000 Team Leader PowerPoint presentations. The tool should perform headless updates of metrics within text boxes, pie charts, and table heatmaps. To ensure visual consistency, the solution must use a predefined template as a class-based bridge, parsing data directly into existing object placeholders. Please prioritize a solution that leverages high-level automation libraries to ensure maximum processing efficiency and scalability.
+```
+
+* AI Agentic Output
+
+State: python
+
+Solution: To automate the updates of Team Leader PowerPoint presentations as described, we can leverage the python-pptx library for handling PowerPoint files, as well as the pandas library for data manipulation. Below is a Python script that performs the desired automation:
+
+```Python
+import os
+import pandas as pd
+from pptx import Presentation
+from pptx.util import Inches
+
+class PowerPointUpdater:
+    def __init__(self, template_path, data_frame):
+        self.template_path = template_path
+        self.data_frame = data_frame
+
+    def update_presentations(self, presentations_folder):
+        for filename in os.listdir(presentations_folder):
+            if filename.endswith('.pptx'):
+                self.update_presentation(os.path.join(presentations_folder, filename))
+
+    def update_presentation(self, pptx_path):
+        print(f'Updating: {pptx_path}')
+        prs = Presentation(pptx_path)
+
+        for slide in prs.slides:
+            for shape in slide.shapes:
+                if shape.has_text_frame:
+                    self.replace_text(shape)
+                elif shape.has_chart:
+                    self.update_chart(shape)
+                elif shape.has_table:
+                    self.update_table(shape)
+
+        prs.save(pptx_path)
+
+    def replace_text(self, shape):
+        for paragraph in shape.text_frame.paragraphs:
+            for run in paragraph.runs:
+                if run.text in self.data_frame.columns:
+                    run.text = str(self.data_frame[run.text].values[0])
+
+    def update_chart(self, shape):
+        chart = shape.chart
+        # Assuming there is only one series for simplicity
+        for series in chart.series:
+            series.points[0].data_label.text = str(self.data_frame[series.name].values[0])
+
+    def update_table(self, shape):
+        for row_idx, row in enumerate(shape.table.rows):
+            for col_idx, cell in enumerate(row.cells):
+                try:
+                    cell.text = str(self.data_frame.iloc[row_idx, col_idx])
+                except IndexError:
+                    continue
+
+def main():
+    template_path = 'path/to/your/template.pptx'  # Change to your template path
+    presentations_folder = 'path/to/presentations/'  # Change to the path with presentations
+    data_file = 'path/to/data.csv'  # Change to your data source path (CSV)
+
+    data_frame = pd.read_csv(data_file)
+    updater = PowerPointUpdater(template_path, data_frame)
+    updater.update_presentations(presentations_folder)
+
+if __name__ == '__main__':
+    main()
+```
+
+Explanation
+Class Definition: PowerPointUpdater encapsulates all the functionality needed to update presentations based on a supplied data frame.
+
+Update Presentations: Loops through all PowerPoint files in a specified folder and updates each one.
+
+Update Presentation: Opens a presentation and iterates through slides and shapes:
+
+Text Updates: Replaces any text found in text boxes with corresponding data from the DataFrame.
+
+Chart Updates: Updates chart data labels based on the DataFrame.
+
+Table Updates: Populates table cells with data from the DataFrame while handling potential index errors.
+
+Main Method: Sets paths for the template, presentations, and data source. Initializes the updater and calls the update process.
+
+Requirements
+Install python-pptx and pandas libraries via pip:
+
+```Bash
+pip install python-pptx pandas
+```
+
+Scaling
+This script handles updates efficiently across numerous presentations and can be further optimized or parallelized using multiprocessing if needed for extremely large datasets.
+
+Important Note: Make sure the placeholders (text, charts, and table formats) in the PowerPoint presentations match the expected format as described in the code to ensure successful updates. Adjust the logic in update_chart and update_table as necessary depending on the specific structure of your presentations.
 
 ## 🛠 Tech Stack & Engineering Standards
 - **Framework:** `LangGraph` (Directed Acyclic Graphs with Cyclic State Management)
