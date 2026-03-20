@@ -1,10 +1,31 @@
-# Agentic Multi-Language Orchestrator (LangGraph & Pydantic)
+ 
+## 🚀 Agentic AI Tech Stack Evaluator
 
-## 🎯 Executive Overview
-This project demonstrates a **Production-Grade Agentic Workflow** designed to bridge the gap between legacy systems (VBA) and modern data science stacks (Python, R). Using **LangGraph** for state management and **Azure OpenAI (GPT-4o-mini)** for reasoning, the orchestrator autonomously classifies business requirements and routes them to specialized agents for code generation.
+This project is a production-oriented agentic workflow that helps companies decide **when to keep legacy VBA solutions and when to migrate to modern Python/R stacks**.
 
-**Business Value:** Automates the decision-making process for technology migration, ensuring that legacy automation (VBA) is only used when necessary, while promoting scalable Python/R architectures. It eliminates human error in tech stack selection.
+It uses a multi-agent system (built with LangGraph and Azure OpenAI) to:
 
+* analyze business requirements
+* classify task complexity
+* recommend the optimal technology stack
+* generate implementation-ready code
+
+### 💼 Business Value
+
+* Reduces incorrect tech decisions in legacy-heavy environments
+* Automates migration planning from VBA to scalable data stacks
+* Ensures Python/R is used where it adds real value (not by default)
+* Minimizes human bias in architecture decisions
+
+### 🧠 How it works
+
+An orchestrator agent:
+
+1. Interprets business requirements
+2. Routes tasks to specialized agents (VBA / Python / R)
+3. Evaluates trade-offs (complexity, scalability, maintainability)
+4. Returns a structured recommendation + generated code
+5. 
 ---
 
 ## 🛠 Tech Stack & Engineering Standards
