@@ -29,7 +29,7 @@ An orchestrator agent:
 
 ### ✨ Usage Example
 * User Input:
-  ```bash
+```bash
 Please develop a robust, scriptable solution to automate the update of 5,000 Team Leader PowerPoint presentations. The tool should perform headless updates of metrics within text boxes, pie charts, and table heatmaps. To ensure visual consistency, the solution must use a predefined template as a class-based bridge, parsing data directly into existing object placeholders. Please prioritize a solution that leverages high-level automation libraries to ensure maximum processing efficiency and scalability.
 ```
 
