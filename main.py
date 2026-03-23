@@ -4,6 +4,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain_openai.chat_models import AzureChatOpenAI
 from langchain_openai.embeddings import AzureOpenAIEmbeddings
+from modules.db import push_ai_data_to_db
 from modules.vectorizer import process_ai_response
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
@@ -32,6 +33,7 @@ class MessageClassifier(BaseModel):
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     message_type: str | None
+    vector: list | None
 
 
 def classify_message(state: State):
@@ -118,8 +120,10 @@ def vba_agent(state: State):
 
 def vectonize_code(state: State):
     last_message = state["messages"][-1].content
-    vector = process_ai_response(last_message)
-    return {"messages": [{"role": "assistant", "content": str(vector)}]}
+    vector_data = process_ai_response(last_message)
+    if hasattr(vector_data, "numpy"):
+        vector_data = vector_data.numpy().flatten().tolist()
+    return {"vector": vector_data}
 
 graph_builder = StateGraph(State)
 
@@ -145,27 +149,39 @@ graph_builder.add_edge("vectonizer", END)
 graph = graph_builder.compile()
 
 
+# MAIN CHAT LOOP
 def run_chatbot():
-    state = {"messages": [], "message_type": None}
+    print("--- Agentic AI Tech Stack Evaluator ---")
     while True:
         user_input = input("Message (type exit to close): ")
-        if user_input == "exit":
-            print("Bye")
-            return ""
+        if user_input.lower() == "exit":
+            print("Shutting down...")
+            break
 
-        state["messages"] = state.get(
-            "messages", []) + [{"role": "user", "content": user_input}]
-        state = graph.invoke(state)
-        if state.get("messages") and len(state["messages"]) > 0:
-            solution_message = state["messages"][-2].content
-            vector = state["messages"][-1].content
-            embedding_vector = embeddings_model.embed_query(state["messages"][0].content)
-            print(
-                f"""\nState: {state.get('message_type')}\n\nSoluton: {solution_message}\n\n
-                 Vector: {vector}\n\nEmbedding vector: {embedding_vector}""")
+        # Start with a fresh state (clears message history for every query)
+        initial_state = {"messages": [{"role": "user", "content": user_input}]}
+        
+        # Execute graph
+        final_state = graph.invoke(initial_state)
+        
+        # Extract data for processing and storage
+        if "messages" in final_state and len(final_state["messages"]) >= 2:
+            user_query = final_state["messages"][0].content
+            solution = final_state["messages"][1].content
+            msg_type = final_state.get('message_type')
+            tf_vector = final_state.get("vector")
+            
+            # Generate Azure Embedding for the user's prompt
+            azure_embedding = embeddings_model.embed_query(user_query)
+            
+            print(f"\n--- STACK: {msg_type.upper()} ---\n{solution}\n")
+            
+            # Save all data to PostgreSQL Vault
+            push_ai_data_to_db(user_query, msg_type, solution, azure_embedding, tf_vector)
 
-
+# Print ASCII graph visualization on startup
 print(graph.get_graph().draw_ascii())
 
 if __name__ == "__main__":
     run_chatbot()
+    
