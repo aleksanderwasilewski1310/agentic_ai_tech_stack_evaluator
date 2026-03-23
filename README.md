@@ -134,6 +134,8 @@ Important Note: Make sure the placeholders (text, charts, and table formats) in 
 - **Framework:** `LangGraph` (Directed Acyclic Graphs with Cyclic State Management)
 - **Validation:** `Pydantic v2` for Strict Structured Output and Type Safety
 - **LLM:** `AzureChatOpenAI` (Integrated via **Poland Central** region for minimal latency)
+- **Vector Database:** `PostgreSQL` with `pgvector` – Custom-built hybrid storage for persistent semantic memory, featuring HNSW indexing for high-performance      similarity searches.
+- **Embeddings:** `AzureOpenAIEmbeddings` (`text-embedding-3-small`) – High-dimensional semantic representation (512-dim) for multi-language query alignment.
 - **Containerization:** `Docker` & `Docker Compose` for environment parity.
 - **State Management:** `TypedDict` with `Annotated` message history for full traceability.
 
