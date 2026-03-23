@@ -1,7 +1,11 @@
 import psycopg2
+from dotenv import load_dotenv
 from pgvector.psycopg2 import register_vector
 import numpy as np
 import tensorflow as tf
+import os
+
+load_dotenv()
 
 def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output):
     """
@@ -12,11 +16,11 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output):
     try:
         # 1. Connection (note the port 5433!)
         conn = psycopg2.connect(
-            host="db",
-            port="5432",
-            database="postgres",
-            user="postgres",
-            password="password"
+            host=os.getenv("DB_HOST", "db"),
+            port=os.getenv("DB_PORT", "5432"),
+            database=os.getenv("DB_NAME", "postgres"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASS", "password")
         )
         register_vector(conn)
         cur = conn.cursor()
@@ -45,7 +49,7 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output):
     except Exception as e:
         print(f"❌ Database insert error: {e}")
     finally:
-        if conn:
-            conn.close()
         if cur:
             cur.close()
+        if conn:
+            conn.close()
