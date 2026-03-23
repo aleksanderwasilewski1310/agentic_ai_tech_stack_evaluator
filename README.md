@@ -176,16 +176,16 @@ This is the fastest way to ensure environment consistency.
 
 2. **Build the image:**
    ```bash
-   docker compose build
+   docker compose up --build
     ```
-
-3. **Run the interactive agent:**
+   
+3. **Detach by typing "D".**
+   
+4. **Run the interactive agent:**
 
     ```Bash
-    docker run -it agentic_ai_tech_stack_evaluator-server
+    docker attach agentic_ai_tech_stack_evaluator-server-1
     ```
-
-(Note: The -it flag is mandatory for interactive terminal sessions with the LLM agents.)
 
 ### Local Installation
 
