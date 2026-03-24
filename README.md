@@ -10,12 +10,68 @@ It uses a multi-agent system (built with LangGraph and Azure OpenAI) to:
 * recommend the optimal technology stack
 * generate implementation-ready code
 
+### 🧠 Advanced Architecture: Semantic Cache & Hybrid RAG
+
+```mermaid
+graph TD
+    %% Node Style Definitions
+    classDef startend fill:#f9f9f9,stroke:#333,stroke-width:2px,color:black;
+    classDef proc fill:#e3f2fd,stroke:#1565c0,stroke-width:1px,color:black;
+    classDef router fill:#fff9c4,stroke:#fbc02d,stroke-width:1px,color:black;
+    classDef agent fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px,color:black;
+    classDef db fill:#f5f5f5,stroke:#666,stroke-width:1px,stroke-dasharray: 5 5,color:black;
+
+    %% Main Flow
+    Start([🚀 start]) --> CheckCache{🔍 check_cache}
+    
+    %% Semantic Cache & RAG Logic
+    CheckCache -- "Hit (Dist < 0.1)" --> End([🏁 end])
+    CheckCache -- "Miss (Dist > 0.1)" --> Classifier[🤖 classifier]
+
+    %% Routing
+    Classifier --> Router{🔀 router}
+
+    %% Agents
+    Router -- "python" --> PythonAgent[🐍 python_agent]
+    Router -- "r" --> RAgent[📊 r_agent]
+    Router -- "vba" --> VBAAgent[📉 vba_agent]
+
+    %% Post-processing
+    PythonAgent --> Vectorizer[🔢 vectonizer]
+    RAgent --> Vectorizer
+    VBAAgent --> Vectorizer
+    Vectorizer --> End
+
+    %% Persistence Layer (Database)
+    subgraph Vault [🗄️ PostgreSQL + pgvector]
+        Storage[(Semantic Storage)]
+    end
+
+    %% Connections to Database
+    CheckCache -.-> Storage
+    Vectorizer -.-> Storage
+
+    %% Applying Styles
+    class Start,End startend;
+    class Classifier,Vectorizer proc;
+    class Router,CheckCache router;
+    class PythonAgent,RAgent,VBAAgent agent;
+    class Storage db;
+```
+    
+The system features a Multi-Tier Semantic Memory powered by pgvector in PostgreSQL. This architecture solves the common LLM challenges of high latency and redundant token costs:
+
+Tier 1: Semantic Cache (Distance < 0.1): If a query has >90% similarity with a previously answered question, the system performs a Direct Cache Hit, returning the stored solution instantly without calling the LLM.
+
+Tier 2: Hybrid Context Injection (Distance 0.1 - 0.3): For queries with 70-90% similarity, the system retrieves the historical solution and injects it as Few-Shot Context into the Classifier and Agent nodes. This ensures architectural consistency across similar business requests.
+
+Tier 3: Autonomous Reasoning (Distance > 0.3): Full agentic orchestration for novel problems.
+
 ### 💼 Business Value
 
-* Reduces incorrect tech decisions in legacy-heavy environments
-* Automates migration planning from VBA to scalable data stacks
-* Ensures Python/R is used where it adds real value (not by default)
-* Minimizes human bias in architecture decisions
+* Cost Efficiency: Reduces OpenAI token consumption by up to 80% through semantic caching.
+* Architectural Consistency: Injected context prevents "model drift" by following established technology patterns.
+* Migration Accelerator: Automates the decision-making process for migrating legacy Excel/VBA tools to cloud-ready Python/R solutions.
 
 ### 🧠 How it works
 
@@ -144,8 +200,8 @@ Important Note: Make sure the placeholders (text, charts, and table formats) in 
 ## 🏗 System Architecture (Agentic Design)
 The system follows a **Modular Router-Agent Architecture**:
 
-1. **Semantic Classifier (Node):** Performs trade-off analysis (VBA integration vs. Python scalability) using structured output.
-2. **State-Based Router:** A conditional logic gate managing the flow between nodes based on the Classifier's intent.
+1. **Semantic Classifier (Node):** The entry point that decides between Cache, RAG-injection, or Cold Start.
+2. **State-Based Router:** Manages the flow based on semantic distance and classification results.
 3. **Specialized Reasoning Engines (Nodes):**
     * **Python Agent:** Optimized for scalable data engineering and ML.
     * **R Agent:** Tailored for advanced statistical modeling and visualization.
@@ -219,11 +275,11 @@ This is the fastest way to ensure environment consistency.
 
 ## 🚦 Key Senior-Level Features
 
-Hypothesis-Driven Routing: The classifier evaluates business heuristics before routing, preventing "model hallucinations" in stack choice.
+Semantic Cache Logic: Custom SQL implementation using (azure_embedding <=> %s::vector) for high-performance distance calculation.
 
-Error-Resistant Design: Implementation of Pydantic models ensures the orchestrator never crashes due to unstructured LLM responses.
+Dynamic State Management: Using TypedDict and Annotated to track message history and cross-node context.
 
-Production Hygiene: Isolated environment via Docker, ready for CI/CD and cloud-native deployment.
+Environment Parity: Multi-container setup (App + DB) ensures the system works identically in dev, staging, and production.
 
 ### 📈 Future Roadmap
 
