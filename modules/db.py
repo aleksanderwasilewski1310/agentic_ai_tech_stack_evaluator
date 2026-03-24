@@ -53,3 +53,60 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output):
             cur.close()
         if conn:
             conn.close()
+
+def find_similar_query_and_distance(query_embedding, threshold=0.1):
+    """
+    Searches the database for a similar query using vector similarity.
+    Uses pgvector's cosine distance operator (<=>).
+    Distance = 1 - Cosine Similarity.
+    Threshold 0.1 means we accept matches with >90% similarity.
+    """
+    conn = None
+    cur = None
+    similar_solution = None
+    distance = None
+
+    try:
+        # Establish connection using environment variables
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST", "db"),
+            port=os.getenv("DB_PORT", "5432"),
+            database=os.getenv("DB_NAME", "postgres"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASS", "password")
+        )
+        # Required to handle vector types in psycopg2
+        register_vector(conn)
+        cur = conn.cursor()
+
+        # SQL query to find the closest match based on Azure embeddings
+        # We select the solution and the distance
+        search_query = """
+        SELECT solution_code, (azure_embedding <=> %s::vector) AS distance
+        FROM tech_stack_evals
+        WHERE (azure_embedding <=> %s::vector) < %s
+        ORDER BY distance ASC
+        LIMIT 1;
+        """
+
+        # Execute search with the provided embedding and threshold
+        cur.execute(search_query, (query_embedding, query_embedding, threshold))
+        result = cur.fetchone()
+
+        if result:
+            similar_solution = result[0]
+            distance = result[1]
+            print(f"🔍 Semantic Cache Hit! Found match with distance: {distance:.4f}")
+        else:
+            print("⚪ No similar query found in Semantic Cache.")
+
+    except Exception as e:
+        print(f"❌ Database search error: {e}")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+    return similar_solution, distance
+

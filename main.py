@@ -4,7 +4,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain_openai.chat_models import AzureChatOpenAI
 from langchain_openai.embeddings import AzureOpenAIEmbeddings
-from modules.db import push_ai_data_to_db
+from modules.db import push_ai_data_to_db, find_similar_query_and_distance
 from modules.vectorizer import process_ai_response
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
@@ -34,32 +34,64 @@ class State(TypedDict):
     messages: Annotated[list, add_messages]
     message_type: str | None
     vector: list | None
+    cached_response: str | None  # 90%+ matches
+    similar_context: str | None  # 70-89% matches
 
+def check_cache_and_context(state: State):
+    """
+    Advanced semantic lookup node. 
+    - Distance < 0.1 (90% similarity): Triggers direct Cache Hit.
+    - Distance 0.1 - 0.3 (70-90% similarity): Injects found solution as context for the LLM.
+    """
+    user_query = state["messages"][-1].content
+    query_embedding = embeddings_model.embed_query(user_query)
+    
+    # We need a modified DB function that returns both solution and distance
+    solution, distance = find_similar_query_and_distance(query_embedding)
+    
+    if solution:
+        if distance < 0.1:
+            return {"cached_response": solution, "similar_context": None}
+        elif distance < 0.3:
+            return {"cached_response": None, "similar_context": solution}
+            
+    return {"cached_response": None, "similar_context": None}
 
 def classify_message(state: State):
     last_message = state["messages"][-1]
+    context = state.get("similar_context")
+
+    system_prompt = """Based on the description provided and following pros for each languages classify if the Tool should be Prepared in:
+                    - 'vba': VBA is tightly integrated with Microsoft Office applications like Excel,
+                     making it ideal for automating repetitive tasks and building quick macros within these environments. 
+                     It requires minimal setup and is accessible to users familiar with Excel but less experienced in programming.  
+                     However, it is less versatile and powerful for complex data analysis compared to Python and R.
+                    - 'r': R is specifically designed for statistical analysis and visualization,  
+                     providing a rich ecosystem of packages tailored for advanced statistical modeling and data science.  
+                     It excels in exploratory data analysis and producing publication-quality graphics, often preferred by statisticians and researchers over Python and VBA.  
+                     While less general-purpose than Python, R’s specialized tools make it powerful for in-depth statistical work..
+                    - 'python': Python offers a versatile, easy-to-learn syntax with extensive libraries for data analysis, machine learning, and automation,  
+                     making it suitable for a wide range of applications beyond just data tasks. It has strong community support and integrates well with other systems,  
+                     outperforming VBA in scalability and R in general-purpose programming. Python’s flexibility makes it a top choice for both beginners and advanced users."""
+
+    if context:
+        system_prompt += f"\n\nCONTEXT FROM SIMILAR PREVIOUS TASK:\n{context}\n"
+        system_prompt += "Use the above context to ensure consistency in technology choice."
+
     classifier_llm = llm.with_structured_output(MessageClassifier)
     result = classifier_llm.invoke([
         {
             "role": "system",
-            "content": """Based on the description provided and following pros for each languages classify if the Tool should be Prepared in:
-            - 'vba': VBA is tightly integrated with Microsoft Office applications like Excel,""" +
-            """ making it ideal for automating repetitive tasks and building quick macros within these environments.""" +
-            """ It requires minimal setup and is accessible to users familiar with Excel but less experienced in programming. """ +
-            """ However, it is less versatile and powerful for complex data analysis compared to Python and R.
-            - 'r': R is specifically designed for statistical analysis and visualization, """ +
-            """ providing a rich ecosystem of packages tailored for advanced statistical modeling and data science. """ +
-            """ It excels in exploratory data analysis and producing publication-quality graphics, often preferred by statisticians and researchers over Python and VBA. """ +
-            """ While less general-purpose than Python, R’s specialized tools make it powerful for in-depth statistical work..
-            - 'python': Python offers a versatile, easy-to-learn syntax with extensive libraries for data analysis, machine learning, and automation, """ +
-            """ making it suitable for a wide range of applications beyond just data tasks. It has strong community support and integrates well with other systems, """ +
-            """ outperforming VBA in scalability and R in general-purpose programming. Python’s flexibility makes it a top choice for both beginners and advanced users.
-            """
+            "content": system_prompt
         },
         {"role": "user", "content": last_message.content}
     ])
     return {"message_type": result.message_type}
 
+def cache_router(state: State):
+    if state.get("cached_response"):
+        return "end_with_cache"
+    return "continue_to_classify"
 
 def router(state: State):
     message_type = state.get("message_type", "vba")
@@ -127,6 +159,7 @@ def vectonize_code(state: State):
 
 graph_builder = StateGraph(State)
 
+graph_builder.add_node("check_cache", check_cache_and_context)
 graph_builder.add_node("classifier", classify_message)
 graph_builder.add_node("python", python_agent)
 graph_builder.add_node("r", r_agent)
@@ -134,8 +167,18 @@ graph_builder.add_node("vba", vba_agent)
 graph_builder.add_node("router", router)
 graph_builder.add_node("vectonizer", vectonize_code)
 
-graph_builder.add_edge(START, "classifier")
+graph_builder.add_edge(START, "check_cache")
 graph_builder.add_edge("classifier", "router")
+
+graph_builder.add_conditional_edges(
+    "check_cache",
+    cache_router,
+    {
+        "end_with_cache": END,
+        "continue_to_classify": "classifier"
+    }
+)
+
 graph_builder.add_conditional_edges(
     "router",
     lambda state: state.get("next"),
@@ -178,6 +221,11 @@ def run_chatbot():
             
             # Save all data to PostgreSQL Vault
             push_ai_data_to_db(user_query, msg_type, solution, azure_embedding, tf_vector)
+        
+        # If there is a cached response
+        else:
+            solution = final_state["cached_response"]
+            print(f"\n---CACHED SOLUTION---\n{solution}\n")
 
 # Print ASCII graph visualization on startup
 print(graph.get_graph().draw_ascii())
