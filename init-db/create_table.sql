@@ -24,7 +24,10 @@ CREATE TABLE tech_stack_evals (
     
     -- Numerical Metrics from the TensorFlow Model
     tf_confidence_score FLOAT,        -- Model's certainty level
-    logic_complexity_score FLOAT      -- e.g., Problem difficulty rating
+    logic_complexity_score FLOAT,      -- e.g., Problem difficulty rating
+
+    -- Token usage
+    token_used FLOAT
 );
 
 -- STEP 4: Indexing (Ensures search results in milliseconds)

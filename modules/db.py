@@ -7,7 +7,7 @@ import os
 
 load_dotenv()
 
-def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output):
+def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output, tokens_used):
     """
     Combines results from two AI models and saves them to PostgreSQL.
     """
@@ -34,13 +34,13 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output):
         insert_query = """
         INSERT INTO tech_stack_evals (
             query_text, detected_stack, solution_code, 
-            azure_embedding, tf_logic_embedding, tf_confidence_score
-        ) VALUES (%s, %s, %s, %s, %s, %s);
+            azure_embedding, tf_logic_embedding, tf_confidence_score, token_used
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s);
         """
         
         cur.execute(insert_query, (
             query, stack, code, 
-            azure_vec, tf_vector, confidence
+            azure_vec, tf_vector, confidence, tokens_used
         ))
 
         conn.commit()

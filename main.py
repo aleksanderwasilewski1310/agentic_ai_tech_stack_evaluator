@@ -38,17 +38,20 @@ class State(TypedDict):
     cached_response: str | None  # 90%+ matches
     similar_context: str | None  # 70-89% matches
 
-def display_tokens(reply: AIMessage, type: str):
+def get_tokens(reply: AIMessage, type: str):
     """Display Token used
 
     Args:
         reply (AIMessage): Reply from LLM
         type (str): classifier or vba/r/python agent
     """
+    tokens_used = 0
     if hasattr(reply, "usage_metadata"):
         if reply.usage_metadata:
             usage = reply.usage_metadata
-            print(f"--- TOKENS USED BY {type}: {usage['total_tokens']} ---")
+            tokens_used = usage['total_tokens']
+            print(f"--- TOKENS USED BY {type}: {tokens_used} ---")
+    return tokens_used
 
 def check_cache_and_context(state: State):
     """
@@ -100,7 +103,7 @@ def classify_message(state: State):
         },
         {"role": "user", "content": last_message.content}
     ])
-    display_tokens(result, "classifier")
+    get_tokens(result, "classifier")
     return {"message_type": result.message_type}
 
 def cache_router(state: State):
@@ -131,8 +134,8 @@ def python_agent(state: State):
         }
     ]
     reply = llm.invoke(messages)
-    display_tokens(reply, "python agent")
-    return {"messages": [{"role": "assistant", "content": reply.content}]}
+    tokens_used = get_tokens(reply, "python agent")
+    return {"messages": [{"role": "assistant", "content": reply.content, "tokens_usage": tokens_used}]}
 
 
 def r_agent(state: State):
@@ -148,8 +151,8 @@ def r_agent(state: State):
         }
     ]
     reply = llm.invoke(messages)
-    display_tokens(reply, "r agent")
-    return {"messages": [{"role": "assistant", "content": reply.content}]}
+    tokens_used = get_tokens(reply, "r agent")
+    return {"messages": [{"role": "assistant", "content": reply.content, "tokens_usage": tokens_used}]}
 
 
 def vba_agent(state: State):
@@ -165,8 +168,8 @@ def vba_agent(state: State):
         }
     ]
     reply = llm.invoke(messages)
-    display_tokens(reply, "vba agent")
-    return {"messages": [{"role": "assistant", "content": reply.content}]}
+    tokens_used = get_tokens(reply, "vba agent")
+    return {"messages": [{"role": "assistant", "content": reply.content, "tokens_usage": tokens_used}]}
 
 def vectonize_code(state: State):
     last_message = state["messages"][-1].content
@@ -229,12 +232,8 @@ def run_chatbot():
         if "messages" in final_state and len(final_state["messages"]) >= 2:
             user_query = final_state["messages"][0].content
             solution = final_state["messages"][1].content
-            # Last assistant message
-            last_ai_message = [m for m in final_state["messages"] if isinstance(m, AIMessage)][-1]
-
-            if hasattr(last_ai_message, "usage_metadata") and last_ai_message.usage_metadata:
-                usage = last_ai_message.usage_metadata
-                print(f"Tokens used: {usage['total_tokens']}")
+            last_msg = final_state["messages"][-1]
+            tokens_used = last_msg.additional_kwargs.get("tokens_usage", 0)     
             msg_type = final_state.get('message_type')
             tf_vector = final_state.get("vector")
             
@@ -244,7 +243,7 @@ def run_chatbot():
             print(f"\n--- STACK: {msg_type.upper()} ---\n{solution}\n")
             
             # Save all data to PostgreSQL Vault
-            push_ai_data_to_db(user_query, msg_type, solution, azure_embedding, tf_vector)
+            push_ai_data_to_db(user_query, msg_type, solution, azure_embedding, tf_vector, tokens_used)
         
         # If there is a cached response
         else:
