@@ -4,6 +4,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain_openai.chat_models import AzureChatOpenAI
 from langchain_openai.embeddings import AzureOpenAIEmbeddings
+from langchain_core.messages import AIMessage
 from modules.db import push_ai_data_to_db, find_similar_query_and_distance
 from modules.vectorizer import process_ai_response
 from pydantic import BaseModel, Field
@@ -36,6 +37,18 @@ class State(TypedDict):
     vector: list | None
     cached_response: str | None  # 90%+ matches
     similar_context: str | None  # 70-89% matches
+
+def display_tokens(reply: AIMessage, type: str):
+    """Display Token used
+
+    Args:
+        reply (AIMessage): Reply from LLM
+        type (str): classifier or vba/r/python agent
+    """
+    if hasattr(reply, "usage_metadata"):
+        if reply.usage_metadata:
+            usage = reply.usage_metadata
+            print(f"--- TOKENS USED BY {type}: {usage['total_tokens']} ---")
 
 def check_cache_and_context(state: State):
     """
@@ -75,6 +88,7 @@ def classify_message(state: State):
                      outperforming VBA in scalability and R in general-purpose programming. Python’s flexibility makes it a top choice for both beginners and advanced users."""
 
     if context:
+        print(f"\n⚪ Context added {context}.\n")
         system_prompt += f"\n\nCONTEXT FROM SIMILAR PREVIOUS TASK:\n{context}\n"
         system_prompt += "Use the above context to ensure consistency in technology choice."
 
@@ -86,6 +100,7 @@ def classify_message(state: State):
         },
         {"role": "user", "content": last_message.content}
     ])
+    display_tokens(result, "classifier")
     return {"message_type": result.message_type}
 
 def cache_router(state: State):
@@ -116,6 +131,7 @@ def python_agent(state: State):
         }
     ]
     reply = llm.invoke(messages)
+    display_tokens(reply, "python agent")
     return {"messages": [{"role": "assistant", "content": reply.content}]}
 
 
@@ -132,6 +148,7 @@ def r_agent(state: State):
         }
     ]
     reply = llm.invoke(messages)
+    display_tokens(reply, "r agent")
     return {"messages": [{"role": "assistant", "content": reply.content}]}
 
 
@@ -148,6 +165,7 @@ def vba_agent(state: State):
         }
     ]
     reply = llm.invoke(messages)
+    display_tokens(reply, "vba agent")
     return {"messages": [{"role": "assistant", "content": reply.content}]}
 
 def vectonize_code(state: State):
@@ -211,6 +229,12 @@ def run_chatbot():
         if "messages" in final_state and len(final_state["messages"]) >= 2:
             user_query = final_state["messages"][0].content
             solution = final_state["messages"][1].content
+            # Last assistant message
+            last_ai_message = [m for m in final_state["messages"] if isinstance(m, AIMessage)][-1]
+
+            if hasattr(last_ai_message, "usage_metadata") and last_ai_message.usage_metadata:
+                usage = last_ai_message.usage_metadata
+                print(f"Tokens used: {usage['total_tokens']}")
             msg_type = final_state.get('message_type')
             tf_vector = final_state.get("vector")
             
