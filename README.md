@@ -80,7 +80,7 @@ An orchestrator agent:
 1. Interprets business requirements
 2. Routes tasks to specialized agents (VBA / Python / R)
 3. Evaluates trade-offs (complexity, scalability, maintainability)
-4. Returns a structured recommendation + generated code
+4. Returns a tokens usage + structured recommendation + generated code
 ---
 
 ### ✨ Usage Example
@@ -91,7 +91,9 @@ Please develop a robust, scriptable solution to automate the update of 5,000 Tea
 
 * AI Agentic Output
 
-State: python
+--- TOKENS USED BY python agent: 2166 ---
+
+--- STACK: PYTHON ---
 
 Solution: To automate the updates of Team Leader PowerPoint presentations as described, we can leverage the python-pptx library for handling PowerPoint files, as well as the pandas library for data manipulation. Below is a Python script that performs the desired automation:
 
