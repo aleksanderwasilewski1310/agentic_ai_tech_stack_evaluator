@@ -14,17 +14,23 @@ import os
 load_dotenv()
 
 llm = AzureChatOpenAI(azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                      azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
+                      azure_deployment=os.getenv(
+                          "AZURE_OPENAI_DEPLOYMENT_NAME"),
                       api_version=os.getenv("OPENAI_API_VERSION"),
                       api_key=os.getenv("AZURE_OPENAI_API_KEY"))
 
 embeddings_model = AzureOpenAIEmbeddings(model="text-embedding-3-small",
-                                         azure_deployment=os.getenv("EMBEDDING_DEPLOYMENT_NAME"),
-                                         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                                         api_version=os.getenv("EMBEDDING_API_VERSION"),
-                                         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+                                         azure_deployment=os.getenv(
+                                             "EMBEDDING_DEPLOYMENT_NAME"),
+                                         azure_endpoint=os.getenv(
+                                             "AZURE_OPENAI_ENDPOINT"),
+                                         api_version=os.getenv(
+                                             "EMBEDDING_API_VERSION"),
+                                         api_key=os.getenv(
+                                             "AZURE_OPENAI_API_KEY"),
                                          dimensions=512
-                                         )                      
+                                         )
+
 
 class MessageClassifier(BaseModel):
     message_type: Literal["python", "r", "vba"] = Field(
@@ -37,6 +43,7 @@ class State(TypedDict):
     vector: list | None
     cached_response: str | None  # 90%+ matches
     similar_context: str | None  # 70-89% matches
+
 
 def get_tokens(reply: AIMessage, type: str):
     """Display Token used
@@ -53,6 +60,7 @@ def get_tokens(reply: AIMessage, type: str):
             print(f"--- TOKENS USED BY {type}: {tokens_used} ---")
     return tokens_used
 
+
 def check_cache_and_context(state: State):
     """
     Advanced semantic lookup node. 
@@ -61,17 +69,18 @@ def check_cache_and_context(state: State):
     """
     user_query = state["messages"][-1].content
     query_embedding = embeddings_model.embed_query(user_query)
-    
+
     # We need a modified DB function that returns both solution and distance
     solution, distance = find_similar_query_and_distance(query_embedding)
-    
+
     if solution:
         if distance < 0.1:
             return {"cached_response": solution, "similar_context": None}
         elif distance < 0.3:
             return {"cached_response": None, "similar_context": solution}
-            
+
     return {"cached_response": None, "similar_context": None}
+
 
 def classify_message(state: State):
     last_message = state["messages"][-1]
@@ -106,10 +115,12 @@ def classify_message(state: State):
     get_tokens(result, "classifier")
     return {"message_type": result.message_type}
 
+
 def cache_router(state: State):
     if state.get("cached_response"):
         return "end_with_cache"
     return "continue_to_classify"
+
 
 def router(state: State):
     message_type = state.get("message_type", "vba")
@@ -171,12 +182,14 @@ def vba_agent(state: State):
     tokens_used = get_tokens(reply, "vba agent")
     return {"messages": [{"role": "assistant", "content": reply.content, "tokens_usage": tokens_used}]}
 
+
 def vectonize_code(state: State):
     last_message = state["messages"][-1].content
     vector_data = process_ai_response(last_message)
     if hasattr(vector_data, "numpy"):
         vector_data = vector_data.numpy().flatten().tolist()
     return {"vector": vector_data}
+
 
 graph_builder = StateGraph(State)
 
@@ -224,35 +237,36 @@ def run_chatbot():
 
         # Start with a fresh state (clears message history for every query)
         initial_state = {"messages": [{"role": "user", "content": user_input}]}
-        
+
         # Execute graph
         final_state = graph.invoke(initial_state)
-        
+
         # Extract data for processing and storage
         if "messages" in final_state and len(final_state["messages"]) >= 2:
             user_query = final_state["messages"][0].content
             solution = final_state["messages"][1].content
             last_msg = final_state["messages"][-1]
-            tokens_used = last_msg.additional_kwargs.get("tokens_usage", 0)     
+            tokens_used = last_msg.additional_kwargs.get("tokens_usage", 0)
             msg_type = final_state.get('message_type')
             tf_vector = final_state.get("vector")
-            
+
             # Generate Azure Embedding for the user's prompt
             azure_embedding = embeddings_model.embed_query(user_query)
-            
+
             print(f"\n--- STACK: {msg_type.upper()} ---\n{solution}\n")
-            
+
             # Save all data to PostgreSQL Vault
-            push_ai_data_to_db(user_query, msg_type, solution, azure_embedding, tf_vector, tokens_used)
-        
+            push_ai_data_to_db(user_query, msg_type, solution,
+                               azure_embedding, tf_vector, tokens_used)
+
         # If there is a cached response
         else:
             solution = final_state["cached_response"]
             print(f"\n---CACHED SOLUTION---\n{solution}\n")
+
 
 # Print ASCII graph visualization on startup
 print(graph.get_graph().draw_ascii())
 
 if __name__ == "__main__":
     run_chatbot()
-    

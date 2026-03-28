@@ -7,6 +7,7 @@ import os
 
 load_dotenv()
 
+
 def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output, tokens_used):
     """
     Combines results from two AI models and saves them to PostgreSQL.
@@ -28,7 +29,7 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output, tokens_us
         # 2. Prepare TensorFlow data
         # Extract the vector and a sample confidence score
         tf_vector = tf_model_output
-        confidence = float(np.max(tf_vector)) 
+        confidence = float(np.max(tf_vector))
 
         # 3. SQL INSERT
         insert_query = """
@@ -37,9 +38,9 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output, tokens_us
             azure_embedding, tf_logic_embedding, tf_confidence_score, token_used
         ) VALUES (%s, %s, %s, %s, %s, %s, %s);
         """
-        
+
         cur.execute(insert_query, (
-            query, stack, code, 
+            query, stack, code,
             azure_vec, tf_vector, confidence, tokens_used
         ))
 
@@ -53,6 +54,7 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output, tokens_us
             cur.close()
         if conn:
             conn.close()
+
 
 def find_similar_query_and_distance(query_embedding, threshold=0.1):
     """
@@ -90,13 +92,15 @@ def find_similar_query_and_distance(query_embedding, threshold=0.1):
         """
 
         # Execute search with the provided embedding and threshold
-        cur.execute(search_query, (query_embedding, query_embedding, threshold))
+        cur.execute(search_query, (query_embedding,
+                    query_embedding, threshold))
         result = cur.fetchone()
 
         if result:
             similar_solution = result[0]
             distance = result[1]
-            print(f"🔍 Semantic Cache Hit! Found match with distance: {distance:.4f}")
+            print(
+                f"🔍 Semantic Cache Hit! Found match with distance: {distance:.4f}")
         else:
             print("⚪ No similar query found in Semantic Cache.")
 
@@ -109,4 +113,3 @@ def find_similar_query_and_distance(query_embedding, threshold=0.1):
             conn.close()
 
     return similar_solution, distance
-
