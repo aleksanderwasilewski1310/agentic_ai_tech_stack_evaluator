@@ -1,6 +1,5 @@
 """
 Unit tests for the vectorizer module.
-
 Verifies that the embedding pipeline correctly transforms agent 
 responses into numerical vectors for PostgreSQL storage.
 """
