@@ -1,3 +1,5 @@
+"""Core module for AI Agent infrastructure."""
+
 import os
 from dotenv import load_dotenv
 from typing import Annotated, Literal
@@ -6,10 +8,10 @@ from langgraph.graph.message import add_messages
 from langchain_openai.chat_models import AzureChatOpenAI
 from langchain_openai.embeddings import AzureOpenAIEmbeddings
 from langchain_core.messages import AIMessage
+from typing_extensions import TypedDict
+from pydantic import BaseModel, Field
 from modules.db import push_ai_data_to_db, find_similar_query_and_distance
 from modules.vectorizer import process_ai_response
-from pydantic import BaseModel, Field
-from typing_extensions import TypedDict
 
 load_dotenv()
 
@@ -28,6 +30,8 @@ embeddings_model = AzureOpenAIEmbeddings(
     api_key=os.getenv("AZURE_OPENAI_API_KEY"),
     dimensions=512,
 )
+
+# pylint: disable=too-few-public-methods
 
 
 class MessageClassifier(BaseModel):
@@ -112,7 +116,8 @@ def classify_message(state: State):
                      While less general-purpose than Python, R’s specialized tools make it powerful for in-depth statistical work..
                     - 'python': Python offers a versatile, easy-to-learn syntax with extensive libraries for data analysis, machine learning, and automation,  
                      making it suitable for a wide range of applications beyond just data tasks. It has strong community support and integrates well with other systems,  
-                     outperforming VBA in scalability and R in general-purpose programming. Python’s flexibility makes it a top choice for both beginners and advanced users."""
+                     outperforming VBA in scalability and R in general-purpose programming.
+                       Python’s flexibility makes it a top choice for both beginners and advanced users."""
 
     if context:
         print(f"\n⚪ Context added {context}.\n")
@@ -171,7 +176,7 @@ def router(state: State):
     message_type = state.get("message_type", "vba")
     if message_type == "r":
         return {"next": "r"}
-    elif message_type == "python":
+    if message_type == "python":
         return {"next": "python"}
     return {"next": "vba"}
 
@@ -198,7 +203,8 @@ def python_agent(state: State):
     messages = [
         {
             "role": "system",
-            "content": """You are a Python Developer. Prepare a quick python solution for declared problem. Put the code inside markdown.""",
+            "content": """You are a Python Developer. Prepare a quick python solution for declared problem.
+                          Put the code inside markdown.""",
         },
         {"role": "user", "content": last_message.content},
     ]
@@ -233,7 +239,8 @@ def r_agent(state: State):
     messages = [
         {
             "role": "system",
-            "content": """You are a R Developer. Prepare a quick R Script solution for declared problem. Put the code inside markdown.""",
+            "content": """You are a R Developer. Prepare a quick R Script solution for declared problem.
+                          Put the code inside markdown.""",
         },
         {"role": "user", "content": last_message.content},
     ]
@@ -268,7 +275,8 @@ def vba_agent(state: State):
     messages = [
         {
             "role": "system",
-            "content": """You are a VBA Developer. Prepare a quick VBA Macro Solution for declared problem. Put the code inside markdown.""",
+            "content": """You are a VBA Developer. Prepare a quick VBA Macro Solution for declared problem.
+                          Put the code inside markdown.""",
         },
         {"role": "user", "content": last_message.content},
     ]
@@ -299,7 +307,8 @@ def vectonize_code(state: State):
     """
     last_message = state["messages"][-1].content
     vector_data = process_ai_response(last_message)
-    if hasattr(vector_data, "numpy"):
+    numpy_method = getattr(vector_data, "numpy", None)
+    if numpy_method:
         vector_data = vector_data.numpy().flatten().tolist()
     return {"vector": vector_data}
 
