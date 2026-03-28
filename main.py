@@ -1,3 +1,4 @@
+import os
 from dotenv import load_dotenv
 from typing import Annotated, Literal
 from langgraph.graph import StateGraph, START, END
@@ -9,7 +10,6 @@ from modules.db import push_ai_data_to_db, find_similar_query_and_distance
 from modules.vectorizer import process_ai_response
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
-import os
 
 load_dotenv()
 
@@ -83,6 +83,22 @@ def check_cache_and_context(state: State):
 
 
 def classify_message(state: State):
+    """
+    Classifies the user request to determine the optimal programming language for the task.
+
+    Analyzes the latest message and optional RAG context to select between 
+    VBA, R, or Python based on specific strengths:
+    - VBA: Excel automation and macros.
+    - R: Statistical analysis and visualization.
+    - Python: General-purpose programming and machine learning.
+
+    Args:
+        state (State): The current graph state containing conversation history 
+                       and optional semantic context from previous tasks.
+
+    Returns:
+        dict: A dictionary update containing the identified 'message_type'.
+    """
     last_message = state["messages"][-1]
     context = state.get("similar_context")
 
@@ -117,22 +133,66 @@ def classify_message(state: State):
 
 
 def cache_router(state: State):
+    """
+    Directs the workflow based on the presence of a cached response.
+
+    This router implements a cost-optimization step. If a semantically 
+    similar task was found in the vector database (cache), it bypasses 
+    further LLM processing. Otherwise, it triggers the classification flow.
+
+    Args:
+        state (State): The current graph state containing conversation 
+                       history and potential 'cached_response' from RAG.
+
+    Returns:
+        str: Next node to visit: "end_with_cache" if hit, 
+             "continue_to_classify" if miss.
+    """
     if state.get("cached_response"):
         return "end_with_cache"
     return "continue_to_classify"
 
 
 def router(state: State):
+    """
+    Determines the next execution node based on the classified message type.
+
+    Acts as a conditional gateway in the graph, routing the workflow to 
+    specific language-based processing nodes (R, Python, or VBA). 
+    Defaults to 'vba' if the message type is unrecognized or missing.
+
+    Args:
+        state (State): The current graph state containing the 'message_type' 
+                       determined by the classifier node.
+
+    Returns:
+        dict: A dictionary with the "next" key specifying the destination node.
+    """
     message_type = state.get("message_type", "vba")
     if message_type == "r":
         return {"next": "r"}
     elif message_type == "python":
         return {"next": "python"}
     return {"next": "vba"}
-    pass
 
 
 def python_agent(state: State):
+    """
+    Acts as a specialized Python Developer agent to solve technical problems.
+
+    This node triggers a dedicated LLM chain with a system persona focused 
+    exclusively on Python engineering. It processes the user request 
+    and returns a solution formatted in Markdown, while tracking 
+    token consumption for the Python-specific task.
+
+    Args:
+        state (State): The current graph state containing the user's 
+                       problem description in the last message.
+
+    Returns:
+        dict: An update to the state messages with the assistant's Python 
+              solution and associated token usage metadata.
+    """
     last_message = state["messages"][-1]
 
     messages = [
@@ -150,6 +210,22 @@ def python_agent(state: State):
 
 
 def r_agent(state: State):
+    """
+    Acts as a specialized R Developer agent to solve technical problems.
+
+    This node triggers a dedicated LLM chain with a system persona focused 
+    exclusively on R engineering. It processes the user request 
+    and returns a solution formatted in Markdown, while tracking 
+    token consumption for the R-specific task.
+
+    Args:
+        state (State): The current graph state containing the user's 
+                       problem description in the last message.
+
+    Returns:
+        dict: An update to the state messages with the assistant's R 
+              solution and associated token usage metadata.
+    """
     last_message = state["messages"][-1]
 
     messages = [
@@ -167,6 +243,22 @@ def r_agent(state: State):
 
 
 def vba_agent(state: State):
+    """
+    Acts as a specialized VBA Developer agent to solve technical problems.
+
+    This node triggers a dedicated LLM chain with a system persona focused 
+    exclusively on VBA programming. It processes the user request 
+    and returns a solution formatted in Markdown, while tracking 
+    token consumption for the VBA-specific task.
+
+    Args:
+        state (State): The current graph state containing the user's 
+                       problem description in the last message.
+
+    Returns:
+        dict: An update to the state messages with the assistant's VBA 
+              solution and associated token usage metadata.
+    """
     last_message = state["messages"][-1]
 
     messages = [
@@ -184,6 +276,21 @@ def vba_agent(state: State):
 
 
 def vectonize_code(state: State):
+    """
+    Transforms the assistant's generated code into a numerical vector representation.
+
+    This node triggers the embedding pipeline to convert textual responses 
+    into semantic vectors. It handles tensor-to-list conversion to ensure 
+    compatibility with the PostgreSQL/pgvector storage layer.
+
+    Args:
+        state (State): The current graph state containing the last assistant 
+                       message to be vectorized.
+
+    Returns:
+        dict: A dictionary update containing the 'vector' field with the 
+              flattened numerical embedding.
+    """
     last_message = state["messages"][-1].content
     vector_data = process_ai_response(last_message)
     if hasattr(vector_data, "numpy"):
@@ -228,6 +335,9 @@ graph = graph_builder.compile()
 
 # MAIN CHAT LOOP
 def run_chatbot():
+    """
+    Runs the main chatbot
+    """
     print("--- Agentic AI Tech Stack Evaluator ---")
     while True:
         user_input = input("Message (type exit to close): ")
