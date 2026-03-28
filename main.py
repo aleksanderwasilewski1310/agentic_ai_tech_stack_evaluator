@@ -38,14 +38,15 @@ class MessageClassifier(BaseModel):
     """
     Data schema for the LLM-based message classification.
 
-    This model enforces a strict output structure on the classifier agent, 
-    ensuring it selects exactly one of the supported programming languages. 
+    This model enforces a strict output structure on the classifier agent,
+    ensuring it selects exactly one of the supported programming languages.
     It serves as the contract between the LLM and the graph's routing logic.
 
     Attributes:
-        message_type (Literal["python", "r", "vba"]): The chosen technology stack, 
+        message_type (Literal["python", "r", "vba"]): The chosen technology stack,
             constrained to Python, R, or VBA to ensure downstream compatibility.
     """
+
     message_type: Literal["python", "r", "vba"] = Field(
         ..., description="Classify if the Tool should be prepared in Python, R or VBA."
     )
@@ -55,22 +56,23 @@ class State(TypedDict):
     """
     Represents the shared state of the AI agent workflow.
 
-    This dictionary acts as the short-term memory of the graph, tracking 
-    conversation history, classification results, and semantic search metadata 
+    This dictionary acts as the short-term memory of the graph, tracking
+    conversation history, classification results, and semantic search metadata
     to guide routing and response generation.
 
     Attributes:
-        messages (Annotated[list, add_messages]): Append-only list of conversation 
+        messages (Annotated[list, add_messages]): Append-only list of conversation
             history including system, user, and assistant messages.
-        message_type (str | None): The identified technology stack (e.g., 'python', 
+        message_type (str | None): The identified technology stack (e.g., 'python',
             'r', 'vba') used for routing.
-        vector (list | None): Numerical embedding of the latest assistant response 
+        vector (list | None): Numerical embedding of the latest assistant response
             ready for database storage.
-        cached_response (str | None): Direct answer retrieved from vector store 
+        cached_response (str | None): Direct answer retrieved from vector store
             for high-confidence (90%+) semantic matches.
-        similar_context (str | None): Historical task data used as RAG context 
+        similar_context (str | None): Historical task data used as RAG context
             for partial (70-89%) semantic matches.
     """
+
     messages: Annotated[list, add_messages]
     message_type: str | None
     vector: list | None
