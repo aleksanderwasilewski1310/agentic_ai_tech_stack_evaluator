@@ -1,3 +1,4 @@
+"""Module for managing PostgreSQL database connections for AI agent data."""
 import psycopg2
 from dotenv import load_dotenv
 from pgvector.psycopg2 import register_vector
@@ -47,8 +48,8 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output, tokens_us
         conn.commit()
         print("✅ AI Data (Azure + TensorFlow) successfully stored in the Vault!")
 
-    except Exception as e:
-        print(f"❌ Database insert error: {e}")
+    except Exception as error:
+        print(f"❌ Database insert error: {error}")
     finally:
         if cur:
             cur.close()
@@ -104,8 +105,8 @@ def find_similar_query_and_distance(query_embedding, threshold=0.1):
         else:
             print("⚪ No similar query found in Semantic Cache.")
 
-    except Exception as e:
-        print(f"❌ Database search error: {e}")
+    except Exception as error:
+        print(f"❌ Database search error: {error}")
     finally:
         if cur:
             cur.close()
