@@ -13,28 +13,27 @@ from typing_extensions import TypedDict
 
 load_dotenv()
 
-llm = AzureChatOpenAI(azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                      azure_deployment=os.getenv(
-                          "AZURE_OPENAI_DEPLOYMENT_NAME"),
-                      api_version=os.getenv("OPENAI_API_VERSION"),
-                      api_key=os.getenv("AZURE_OPENAI_API_KEY"))
+llm = AzureChatOpenAI(
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
+    api_version=os.getenv("OPENAI_API_VERSION"),
+    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+)
 
-embeddings_model = AzureOpenAIEmbeddings(model="text-embedding-3-small",
-                                         azure_deployment=os.getenv(
-                                             "EMBEDDING_DEPLOYMENT_NAME"),
-                                         azure_endpoint=os.getenv(
-                                             "AZURE_OPENAI_ENDPOINT"),
-                                         api_version=os.getenv(
-                                             "EMBEDDING_API_VERSION"),
-                                         api_key=os.getenv(
-                                             "AZURE_OPENAI_API_KEY"),
-                                         dimensions=512
-                                         )
+embeddings_model = AzureOpenAIEmbeddings(
+    model="text-embedding-3-small",
+    azure_deployment=os.getenv("EMBEDDING_DEPLOYMENT_NAME"),
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    api_version=os.getenv("EMBEDDING_API_VERSION"),
+    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+    dimensions=512,
+)
 
 
 class MessageClassifier(BaseModel):
     message_type: Literal["python", "r", "vba"] = Field(
-        ..., description="Classify if the Tool should be prepared in Python, R or VBA.")
+        ..., description="Classify if the Tool should be prepared in Python, R or VBA."
+    )
 
 
 class State(TypedDict):
@@ -56,14 +55,14 @@ def get_tokens(reply: AIMessage, type: str):
     if hasattr(reply, "usage_metadata"):
         if reply.usage_metadata:
             usage = reply.usage_metadata
-            tokens_used = usage['total_tokens']
+            tokens_used = usage["total_tokens"]
             print(f"--- TOKENS USED BY {type}: {tokens_used} ---")
     return tokens_used
 
 
 def check_cache_and_context(state: State):
     """
-    Advanced semantic lookup node. 
+    Advanced semantic lookup node.
     - Distance < 0.1 (90% similarity): Triggers direct Cache Hit.
     - Distance 0.1 - 0.3 (70-90% similarity): Injects found solution as context for the LLM.
     """
@@ -86,14 +85,14 @@ def classify_message(state: State):
     """
     Classifies the user request to determine the optimal programming language for the task.
 
-    Analyzes the latest message and optional RAG context to select between 
+    Analyzes the latest message and optional RAG context to select between
     VBA, R, or Python based on specific strengths:
     - VBA: Excel automation and macros.
     - R: Statistical analysis and visualization.
     - Python: General-purpose programming and machine learning.
 
     Args:
-        state (State): The current graph state containing conversation history 
+        state (State): The current graph state containing conversation history
                        and optional semantic context from previous tasks.
 
     Returns:
@@ -118,16 +117,17 @@ def classify_message(state: State):
     if context:
         print(f"\n⚪ Context added {context}.\n")
         system_prompt += f"\n\nCONTEXT FROM SIMILAR PREVIOUS TASK:\n{context}\n"
-        system_prompt += "Use the above context to ensure consistency in technology choice."
+        system_prompt += (
+            "Use the above context to ensure consistency in technology choice."
+        )
 
     classifier_llm = llm.with_structured_output(MessageClassifier)
-    result = classifier_llm.invoke([
-        {
-            "role": "system",
-            "content": system_prompt
-        },
-        {"role": "user", "content": last_message.content}
-    ])
+    result = classifier_llm.invoke(
+        [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": last_message.content},
+        ]
+    )
     get_tokens(result, "classifier")
     return {"message_type": result.message_type}
 
@@ -136,16 +136,16 @@ def cache_router(state: State):
     """
     Directs the workflow based on the presence of a cached response.
 
-    This router implements a cost-optimization step. If a semantically 
-    similar task was found in the vector database (cache), it bypasses 
+    This router implements a cost-optimization step. If a semantically
+    similar task was found in the vector database (cache), it bypasses
     further LLM processing. Otherwise, it triggers the classification flow.
 
     Args:
-        state (State): The current graph state containing conversation 
+        state (State): The current graph state containing conversation
                        history and potential 'cached_response' from RAG.
 
     Returns:
-        str: Next node to visit: "end_with_cache" if hit, 
+        str: Next node to visit: "end_with_cache" if hit,
              "continue_to_classify" if miss.
     """
     if state.get("cached_response"):
@@ -157,12 +157,12 @@ def router(state: State):
     """
     Determines the next execution node based on the classified message type.
 
-    Acts as a conditional gateway in the graph, routing the workflow to 
-    specific language-based processing nodes (R, Python, or VBA). 
+    Acts as a conditional gateway in the graph, routing the workflow to
+    specific language-based processing nodes (R, Python, or VBA).
     Defaults to 'vba' if the message type is unrecognized or missing.
 
     Args:
-        state (State): The current graph state containing the 'message_type' 
+        state (State): The current graph state containing the 'message_type'
                        determined by the classifier node.
 
     Returns:
@@ -180,115 +180,121 @@ def python_agent(state: State):
     """
     Acts as a specialized Python Developer agent to solve technical problems.
 
-    This node triggers a dedicated LLM chain with a system persona focused 
-    exclusively on Python engineering. It processes the user request 
-    and returns a solution formatted in Markdown, while tracking 
+    This node triggers a dedicated LLM chain with a system persona focused
+    exclusively on Python engineering. It processes the user request
+    and returns a solution formatted in Markdown, while tracking
     token consumption for the Python-specific task.
 
     Args:
-        state (State): The current graph state containing the user's 
+        state (State): The current graph state containing the user's
                        problem description in the last message.
 
     Returns:
-        dict: An update to the state messages with the assistant's Python 
+        dict: An update to the state messages with the assistant's Python
               solution and associated token usage metadata.
     """
     last_message = state["messages"][-1]
 
     messages = [
-        {"role": "system",
-         "content": """You are a Python Developer. Prepare a quick python solution for declared problem. Put the code inside markdown."""
-         },
         {
-            "role": "user",
-            "content": last_message.content
-        }
+            "role": "system",
+            "content": """You are a Python Developer. Prepare a quick python solution for declared problem. Put the code inside markdown.""",
+        },
+        {"role": "user", "content": last_message.content},
     ]
     reply = llm.invoke(messages)
     tokens_used = get_tokens(reply, "python agent")
-    return {"messages": [{"role": "assistant", "content": reply.content, "tokens_usage": tokens_used}]}
+    return {
+        "messages": [
+            {"role": "assistant", "content": reply.content, "tokens_usage": tokens_used}
+        ]
+    }
 
 
 def r_agent(state: State):
     """
     Acts as a specialized R Developer agent to solve technical problems.
 
-    This node triggers a dedicated LLM chain with a system persona focused 
-    exclusively on R engineering. It processes the user request 
-    and returns a solution formatted in Markdown, while tracking 
+    This node triggers a dedicated LLM chain with a system persona focused
+    exclusively on R engineering. It processes the user request
+    and returns a solution formatted in Markdown, while tracking
     token consumption for the R-specific task.
 
     Args:
-        state (State): The current graph state containing the user's 
+        state (State): The current graph state containing the user's
                        problem description in the last message.
 
     Returns:
-        dict: An update to the state messages with the assistant's R 
+        dict: An update to the state messages with the assistant's R
               solution and associated token usage metadata.
     """
     last_message = state["messages"][-1]
 
     messages = [
-        {"role": "system",
-         "content": """You are a R Developer. Prepare a quick R Script solution for declared problem. Put the code inside markdown."""
-         },
         {
-            "role": "user",
-            "content": last_message.content
-        }
+            "role": "system",
+            "content": """You are a R Developer. Prepare a quick R Script solution for declared problem. Put the code inside markdown.""",
+        },
+        {"role": "user", "content": last_message.content},
     ]
     reply = llm.invoke(messages)
     tokens_used = get_tokens(reply, "r agent")
-    return {"messages": [{"role": "assistant", "content": reply.content, "tokens_usage": tokens_used}]}
+    return {
+        "messages": [
+            {"role": "assistant", "content": reply.content, "tokens_usage": tokens_used}
+        ]
+    }
 
 
 def vba_agent(state: State):
     """
     Acts as a specialized VBA Developer agent to solve technical problems.
 
-    This node triggers a dedicated LLM chain with a system persona focused 
-    exclusively on VBA programming. It processes the user request 
-    and returns a solution formatted in Markdown, while tracking 
+    This node triggers a dedicated LLM chain with a system persona focused
+    exclusively on VBA programming. It processes the user request
+    and returns a solution formatted in Markdown, while tracking
     token consumption for the VBA-specific task.
 
     Args:
-        state (State): The current graph state containing the user's 
+        state (State): The current graph state containing the user's
                        problem description in the last message.
 
     Returns:
-        dict: An update to the state messages with the assistant's VBA 
+        dict: An update to the state messages with the assistant's VBA
               solution and associated token usage metadata.
     """
     last_message = state["messages"][-1]
 
     messages = [
-        {"role": "system",
-         "content": """You are a VBA Developer. Prepare a quick VBA Macro Solution for declared problem. Put the code inside markdown."""
-         },
         {
-            "role": "user",
-            "content": last_message.content
-        }
+            "role": "system",
+            "content": """You are a VBA Developer. Prepare a quick VBA Macro Solution for declared problem. Put the code inside markdown.""",
+        },
+        {"role": "user", "content": last_message.content},
     ]
     reply = llm.invoke(messages)
     tokens_used = get_tokens(reply, "vba agent")
-    return {"messages": [{"role": "assistant", "content": reply.content, "tokens_usage": tokens_used}]}
+    return {
+        "messages": [
+            {"role": "assistant", "content": reply.content, "tokens_usage": tokens_used}
+        ]
+    }
 
 
 def vectonize_code(state: State):
     """
     Transforms the assistant's generated code into a numerical vector representation.
 
-    This node triggers the embedding pipeline to convert textual responses 
-    into semantic vectors. It handles tensor-to-list conversion to ensure 
+    This node triggers the embedding pipeline to convert textual responses
+    into semantic vectors. It handles tensor-to-list conversion to ensure
     compatibility with the PostgreSQL/pgvector storage layer.
 
     Args:
-        state (State): The current graph state containing the last assistant 
+        state (State): The current graph state containing the last assistant
                        message to be vectorized.
 
     Returns:
-        dict: A dictionary update containing the 'vector' field with the 
+        dict: A dictionary update containing the 'vector' field with the
               flattened numerical embedding.
     """
     last_message = state["messages"][-1].content
@@ -314,16 +320,13 @@ graph_builder.add_edge("classifier", "router")
 graph_builder.add_conditional_edges(
     "check_cache",
     cache_router,
-    {
-        "end_with_cache": END,
-        "continue_to_classify": "classifier"
-    }
+    {"end_with_cache": END, "continue_to_classify": "classifier"},
 )
 
 graph_builder.add_conditional_edges(
     "router",
     lambda state: state.get("next"),
-    {"python": "python", "r": "r", "vba": "vba"}
+    {"python": "python", "r": "r", "vba": "vba"},
 )
 graph_builder.add_edge("python", "vectonizer")
 graph_builder.add_edge("r", "vectonizer")
@@ -357,7 +360,7 @@ def run_chatbot():
             solution = final_state["messages"][1].content
             last_msg = final_state["messages"][-1]
             tokens_used = last_msg.additional_kwargs.get("tokens_usage", 0)
-            msg_type = final_state.get('message_type')
+            msg_type = final_state.get("message_type")
             tf_vector = final_state.get("vector")
 
             # Generate Azure Embedding for the user's prompt
@@ -366,8 +369,9 @@ def run_chatbot():
             print(f"\n--- STACK: {msg_type.upper()} ---\n{solution}\n")
 
             # Save all data to PostgreSQL Vault
-            push_ai_data_to_db(user_query, msg_type, solution,
-                               azure_embedding, tf_vector, tokens_used)
+            push_ai_data_to_db(
+                user_query, msg_type, solution, azure_embedding, tf_vector, tokens_used
+            )
 
         # If there is a cached response
         else:

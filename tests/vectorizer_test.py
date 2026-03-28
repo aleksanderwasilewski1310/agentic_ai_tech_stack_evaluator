@@ -1,4 +1,5 @@
 import pytest
+
 # Standard import - will work if pytest is run from the root directory
 # and 'modules' contains an __init__.py file.
 try:
@@ -7,8 +8,8 @@ except ImportError:
     # Fallback for different execution contexts
     import sys
     import os
-    sys.path.append(os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..')))
+
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
     from modules.vectorizer import process_ai_response
 
 
