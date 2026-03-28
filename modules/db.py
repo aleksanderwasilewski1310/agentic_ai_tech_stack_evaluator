@@ -1,7 +1,8 @@
 """Module for managing PostgreSQL database connections for AI agent data."""
+
 import psycopg2
 from dotenv import load_dotenv
-from pgvector.psycopg2 import register_vector
+from pgvector.psycopg2 import register_vector  # pylint: disable=import-error
 import numpy as np
 import tensorflow as tf
 import os
@@ -22,7 +23,7 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output, tokens_us
             port=os.getenv("DB_PORT", "5432"),
             database=os.getenv("DB_NAME", "postgres"),
             user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASS", "password")
+            password=os.getenv("DB_PASS", "password"),
         )
         register_vector(conn)
         cur = conn.cursor()
@@ -40,10 +41,10 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output, tokens_us
         ) VALUES (%s, %s, %s, %s, %s, %s, %s);
         """
 
-        cur.execute(insert_query, (
-            query, stack, code,
-            azure_vec, tf_vector, confidence, tokens_used
-        ))
+        cur.execute(
+            insert_query,
+            (query, stack, code, azure_vec, tf_vector, confidence, tokens_used),
+        )
 
         conn.commit()
         print("✅ AI Data (Azure + TensorFlow) successfully stored in the Vault!")
@@ -76,7 +77,7 @@ def find_similar_query_and_distance(query_embedding, threshold=0.1):
             port=os.getenv("DB_PORT", "5432"),
             database=os.getenv("DB_NAME", "postgres"),
             user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASS", "password")
+            password=os.getenv("DB_PASS", "password"),
         )
         # Required to handle vector types in psycopg2
         register_vector(conn)
@@ -93,15 +94,13 @@ def find_similar_query_and_distance(query_embedding, threshold=0.1):
         """
 
         # Execute search with the provided embedding and threshold
-        cur.execute(search_query, (query_embedding,
-                    query_embedding, threshold))
+        cur.execute(search_query, (query_embedding, query_embedding, threshold))
         result = cur.fetchone()
 
         if result:
             similar_solution = result[0]
             distance = result[1]
-            print(
-                f"🔍 Semantic Cache Hit! Found match with distance: {distance:.4f}")
+            print(f"🔍 Semantic Cache Hit! Found match with distance: {distance:.4f}")
         else:
             print("⚪ No similar query found in Semantic Cache.")
 
