@@ -1,11 +1,9 @@
 """Module for managing PostgreSQL database connections for AI agent data."""
-
+import os
 import psycopg2
 from dotenv import load_dotenv
 from pgvector.psycopg2 import register_vector  # pylint: disable=import-error
 import numpy as np
-import tensorflow as tf
-import os
 
 load_dotenv()
 

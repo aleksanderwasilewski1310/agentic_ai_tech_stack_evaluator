@@ -1,3 +1,9 @@
+"""
+Unit tests for the vectorizer module.
+
+Verifies that the embedding pipeline correctly transforms agent 
+responses into numerical vectors for PostgreSQL storage.
+"""
 import pytest
 
 # Standard import - will work if pytest is run from the root directory
