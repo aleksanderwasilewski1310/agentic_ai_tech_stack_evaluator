@@ -1,3 +1,4 @@
+"""Module for code complexity analysis"""
 import re
 from typing import List
 
@@ -15,7 +16,8 @@ def process_ai_response(raw_text: str) -> List[float]:
         raw_text: The full string response received from the AI agent.
 
     Returns:
-        A list contains complexity [Lines of Code, Logic Keywords, I/O Operations, Description Length].
+        A list contains complexity [Lines of Code, Logic Keywords,
+          I/O Operations, Description Length].
     """
 
     # 1. Detect code block and language using Regex
@@ -34,7 +36,8 @@ def process_ai_response(raw_text: str) -> List[float]:
     description = raw_text.replace(match.group(0), "").strip()
 
     # 2. Feature Engineering (Language-Agnostic)
-    # We use regex instead of 'ast' to handle VBA, Python, and other languages without syntax errors.
+    # We use regex instead of 'ast' to handle VBA, Python,
+    #  and other languages without syntax errors.
 
     # Feature 1: Lines of Code (LOC)
     loc = len(code_content.splitlines())

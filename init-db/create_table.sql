@@ -1,9 +1,18 @@
+-- SET QUOTED_IDENTIFIER ON
+-- SET ANSI_NULLS ON
+-- SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+-- SET NOCOUNT ON
+-- pylint: disable=all
+/* tsqllint-disable */
+
 -- STEP 1: Activate Vector Magic (Enable pgvector extension)
+-- This is a PostgreSQL-specific command, ignore T-SQL syntax errors here
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- STEP 2: Cleanup (Optional: uncomment if you want to start from a clean slate)
 -- DROP TABLE IF EXISTS tech_stack_evals;
 
+-- SET QUOTED_IDENTIFIER ON
 -- STEP 3: Create Hybrid Tech Stack Evaluation Table
 CREATE TABLE tech_stack_evals (
     id SERIAL PRIMARY KEY,
@@ -32,5 +41,5 @@ CREATE TABLE tech_stack_evals (
 
 -- STEP 4: Indexing (Ensures search results in milliseconds)
 -- Using HNSW (Hierarchical Navigable Small World) for high-performance similarity search
-CREATE INDEX ON tech_stack_evals USING hnsw (azure_embedding vector_cosine_ops);
-CREATE INDEX ON tech_stack_evals USING hnsw (tf_logic_embedding vector_cosine_ops);
+CREATE INDEX idx_tech_stack_azure_vector ON tech_stack_evals USING hnsw (azure_embedding vector_cosine_ops);
+CREATE INDEX idx_tech_stack_tf_logic_vector ON tech_stack_evals USING hnsw (tf_logic_embedding vector_cosine_ops);
