@@ -1,4 +1,4 @@
- 
+
 ## 🚀 Agentic AI Tech Stack Evaluator
 
 This project is a production-oriented agentic workflow that helps companies decide **when to keep legacy VBA solutions and when to migrate to modern Python/R stacks**.
@@ -223,7 +223,7 @@ This is the fastest way to ensure environment consistency.
     cd agentic_ai_tech_stack_evaluator
     ```
 
-1. **Environment Configuration:**
+2. **Environment Configuration:**
 
     Create a .env file with your Azure credentials:
 
@@ -234,14 +234,14 @@ This is the fastest way to ensure environment consistency.
     OPENAI_API_VERSION="2024-08-01-preview"
     ```
 
-2. **Build the image:**
+3. **Build the image:**
    ```bash
    docker compose up --build
     ```
    
-3. **Detach by typing "D".**
+4. **Detach by typing "D".**
    
-4. **Run the interactive agent:**
+5. **Run the interactive agent:**
 
     ```Bash
     docker attach agentic_ai_tech_stack_evaluator-server-1
@@ -285,10 +285,8 @@ Environment Parity: Multi-container setup (App + DB) ensures the system works id
 
 ### 📈 Future Roadmap
 
-[ ] LangSmith Integration: Trace monitoring and latency tracking for enterprise-scale auditing.
-
-[ ] Groundedness Checks: Automated validation to prevent hallucinations in generated code snippets.
-
-[ ] Cloud-Native Deployment: Transitioning to Azure Container Instances (ACI).
+* **Dynamic RAG Integration:** Continuous synchronization with PostgreSQL (`pgvector`) to provide up-to-date analysis of the latest Python libraries and frameworks.
+* **LangSmith Observability:** Implementation of full-chain tracing and latency monitoring for enterprise-grade auditing and performance optimization.
+* **Cloud-Native Deployment:** Containerization using Docker and transitioning to Azure Container Instances (ACI) for scalable, production-ready hosting.
 
 ### Author: Aleksander Wasilewski
