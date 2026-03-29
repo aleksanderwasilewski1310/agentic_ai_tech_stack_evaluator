@@ -1,5 +1,7 @@
 """Core module for AI Agent infrastructure."""
 
+# pylint: disable=import-error
+# pylint: disable=no-name-in-module
 import os
 from typing import Annotated, Literal
 from dotenv import load_dotenv
@@ -15,14 +17,14 @@ from modules.vectorizer import process_ai_response
 
 load_dotenv()
 
-llm = AzureChatOpenAI(
+LLM = AzureChatOpenAI(
     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
     azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
     api_version=os.getenv("OPENAI_API_VERSION"),
     api_key=os.getenv("AZURE_OPENAI_API_KEY"),
 )
 
-embeddings_model = AzureOpenAIEmbeddings(
+EMBEDDINGS_MODEL = AzureOpenAIEmbeddings(
     model="text-embedding-3-small",
     azure_deployment=os.getenv("EMBEDDING_DEPLOYMENT_NAME"),
     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
@@ -80,19 +82,19 @@ class State(TypedDict):
     similar_context: str | None  # 70-89% matches
 
 
-def get_tokens(reply: AIMessage, type: str):
+def get_tokens(reply: AIMessage, classifier_type: str):
     """Display Token used
 
     Args:
         reply (AIMessage): Reply from LLM
-        type (str): classifier or vba/r/python agent
+        classifier_type (str): classifier or vba/r/python agent
     """
     tokens_used = 0
     if hasattr(reply, "usage_metadata"):
         if reply.usage_metadata:
             usage = reply.usage_metadata
             tokens_used = usage["total_tokens"]
-            print(f"--- TOKENS USED BY {type}: {tokens_used} ---")
+            print(f"--- TOKENS USED BY {classifier_type}: {tokens_used} ---")
     return tokens_used
 
 
@@ -103,7 +105,7 @@ def check_cache_and_context(state: State):
     - Distance 0.1 - 0.3 (70-90% similarity): Injects found solution as context for the LLM.
     """
     user_query = state["messages"][-1].content
-    query_embedding = embeddings_model.embed_query(user_query)
+    query_embedding = EMBEDDINGS_MODEL.embed_query(user_query)
 
     # We need a modified DB function that returns both solution and distance
     solution, distance = find_similar_query_and_distance(query_embedding)
@@ -162,7 +164,7 @@ def classify_message(state: State):
             "Use the above context to ensure consistency in technology choice."
         )
 
-    classifier_llm = llm.with_structured_output(MessageClassifier)
+    classifier_llm = LLM.with_structured_output(MessageClassifier)
     result = classifier_llm.invoke(
         [
             {"role": "system", "content": system_prompt},
@@ -239,13 +241,13 @@ def python_agent(state: State):
     messages = [
         {
             "role": "system",
-            "content": """You are a Python Developer. 
-                          Prepare a quick python solution for declared problem.
-                          Put the code inside markdown.""",
+            "content": """You are a Python Developer.
+                           Prepare a quick python solution for declared problem.
+                           Put the code inside markdown.""",
         },
         {"role": "user", "content": last_message.content},
     ]
-    reply = llm.invoke(messages)
+    reply = LLM.invoke(messages)
     tokens_used = get_tokens(reply, "python agent")
     return {
         "messages": [
@@ -282,7 +284,7 @@ def r_agent(state: State):
         },
         {"role": "user", "content": last_message.content},
     ]
-    reply = llm.invoke(messages)
+    reply = LLM.invoke(messages)
     tokens_used = get_tokens(reply, "r agent")
     return {
         "messages": [
@@ -313,13 +315,13 @@ def vba_agent(state: State):
     messages = [
         {
             "role": "system",
-            "content": """You are a VBA Developer. 
+            "content": """You are a VBA Developer.
                           Prepare a quick VBA Macro Solution for declared problem.
                           Put the code inside markdown.""",
         },
         {"role": "user", "content": last_message.content},
     ]
-    reply = llm.invoke(messages)
+    reply = LLM.invoke(messages)
     tokens_used = get_tokens(reply, "vba agent")
     return {
         "messages": [
@@ -348,40 +350,41 @@ def vectonize_code(state: State):
     vector_data = process_ai_response(last_message)
     numpy_method = getattr(vector_data, "numpy", None)
     if numpy_method:
+        # pylint: disable=no-member
         vector_data = vector_data.numpy().flatten().tolist()
     return {"vector": vector_data}
 
 
-graph_builder = StateGraph(State)
+GRAPH_BUILDER = StateGraph(State)
 
-graph_builder.add_node("check_cache", check_cache_and_context)
-graph_builder.add_node("classifier", classify_message)
-graph_builder.add_node("python", python_agent)
-graph_builder.add_node("r", r_agent)
-graph_builder.add_node("vba", vba_agent)
-graph_builder.add_node("router", router)
-graph_builder.add_node("vectonizer", vectonize_code)
+GRAPH_BUILDER.add_node("check_cache", check_cache_and_context)
+GRAPH_BUILDER.add_node("classifier", classify_message)
+GRAPH_BUILDER.add_node("python", python_agent)
+GRAPH_BUILDER.add_node("r", r_agent)
+GRAPH_BUILDER.add_node("vba", vba_agent)
+GRAPH_BUILDER.add_node("router", router)
+GRAPH_BUILDER.add_node("vectonizer", vectonize_code)
 
-graph_builder.add_edge(START, "check_cache")
-graph_builder.add_edge("classifier", "router")
+GRAPH_BUILDER.add_edge(START, "check_cache")
+GRAPH_BUILDER.add_edge("classifier", "router")
 
-graph_builder.add_conditional_edges(
+GRAPH_BUILDER.add_conditional_edges(
     "check_cache",
     cache_router,
     {"end_with_cache": END, "continue_to_classify": "classifier"},
 )
 
-graph_builder.add_conditional_edges(
+GRAPH_BUILDER.add_conditional_edges(
     "router",
     lambda state: state.get("next"),
     {"python": "python", "r": "r", "vba": "vba"},
 )
-graph_builder.add_edge("python", "vectonizer")
-graph_builder.add_edge("r", "vectonizer")
-graph_builder.add_edge("vba", "vectonizer")
-graph_builder.add_edge("vectonizer", END)
+GRAPH_BUILDER.add_edge("python", "vectonizer")
+GRAPH_BUILDER.add_edge("r", "vectonizer")
+GRAPH_BUILDER.add_edge("vba", "vectonizer")
+GRAPH_BUILDER.add_edge("vectonizer", END)
 
-graph = graph_builder.compile()
+GRAPH = GRAPH_BUILDER.compile()
 
 
 # MAIN CHAT LOOP
@@ -391,7 +394,7 @@ def run_chatbot():
     """
     print("--- Agentic AI Tech Stack Evaluator ---")
     while True:
-        user_input = input("Message (type exit to close): ")
+        user_input = input("Message (type exit to close): ")  # nosec
         if user_input.lower() == "exit":
             print("Shutting down...")
             break
@@ -400,7 +403,7 @@ def run_chatbot():
         initial_state = {"messages": [{"role": "user", "content": user_input}]}
 
         # Execute graph
-        final_state = graph.invoke(initial_state)
+        final_state = GRAPH.invoke(initial_state)
 
         # Extract data for processing and storage
         if "messages" in final_state and len(final_state["messages"]) >= 2:
@@ -412,7 +415,7 @@ def run_chatbot():
             tf_vector = final_state.get("vector")
 
             # Generate Azure Embedding for the user's prompt
-            azure_embedding = embeddings_model.embed_query(user_query)
+            azure_embedding = EMBEDDINGS_MODEL.embed_query(user_query)
 
             print(f"\n--- STACK: {msg_type.upper()} ---\n{solution}\n")
 
@@ -428,7 +431,7 @@ def run_chatbot():
 
 
 # Print ASCII graph visualization on startup
-print(graph.get_graph().draw_ascii())
+print(GRAPH.get_graph().draw_ascii())
 
 if __name__ == "__main__":
     run_chatbot()
