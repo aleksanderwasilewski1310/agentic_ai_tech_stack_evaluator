@@ -420,9 +420,15 @@ def run_chatbot():
             print(f"\n--- STACK: {msg_type.upper()} ---\n{solution}\n")
 
             # Save all data to PostgreSQL Vault
-            push_ai_data_to_db(
-                user_query, msg_type, solution, azure_embedding, tf_vector, tokens_used
-            )
+            ai_data = {
+                "query": user_query,
+                "stack": msg_type,
+                "code": solution,
+                "azure_vec": azure_embedding,
+                "tf_model_output": tf_vector,
+                "tokens_used": tokens_used,
+            }
+            push_ai_data_to_db(ai_data)
 
         # If there is a cached response
         else:
