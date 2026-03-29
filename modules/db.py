@@ -10,12 +10,20 @@ import numpy as np
 load_dotenv()
 
 
-def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output, tokens_used):
+def push_ai_data_to_db(ai_data):
     """
     Combines results from two AI models and saves them to PostgreSQL.
+    Args:
+    ai_data - Dictionary of data received from AI
     """
     conn = None
     cur = None
+    query = ai_data["query"]
+    stack = ai_data["stack"]
+    code = ai_data["code"]
+    azure_vec = ai_data["azure_vec"]
+    tf_model_output = ai_data["tf_model_output"]
+    tokens_used = ai_data["tokens_used"]
     try:
         # 1. Connection (note the port 5433!)
         conn = psycopg2.connect(
@@ -50,7 +58,7 @@ def push_ai_data_to_db(query, stack, code, azure_vec, tf_model_output, tokens_us
         print("✅ AI Data (Azure + TensorFlow) successfully stored in the Vault!")
     except psycopg2.Error as error:
         print(f"❌ Database search error: {error}")
-    except Exception as error:
+    except Exception as error: # pylint: disable=broad-except
         print(f"❌ Unexpected insert error: {error}")
     finally:
         if cur:
@@ -106,7 +114,7 @@ def find_similar_query_and_distance(query_embedding, threshold=0.1):
             print("⚪ No similar query found in Semantic Cache.")
     except psycopg2.Error as error:
         print(f"❌ Database search error: {error}")
-    except Exception as error:
+    except Exception as error: # pylint: disable=broad-except
         print(f"❌ Unexpected search error: {error}")
     finally:
         if cur:

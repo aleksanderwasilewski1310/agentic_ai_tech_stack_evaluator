@@ -4,9 +4,6 @@ Verifies that the embedding pipeline correctly transforms agent
 responses into numerical vectors for PostgreSQL storage.
 """
 
-# pylint: disable=no-name-in-module
-import pytest
-
 # Standard import - will work if pytest is run from the root directory
 # and 'modules' contains an __init__.py file.
 try:
@@ -58,5 +55,5 @@ def test_process_ai_response_no_code():
     """Test case for responses without code blocks."""
     text_input = "No code here."
     vector = process_ai_response(text_input)
-    assert vector[0] == 0.0 # nosec
-    assert vector[3] == float(len(text_input)) # nosec
+    assert vector[0] == 0.0  # nosec
+    assert vector[3] == float(len(text_input))  # nosec
