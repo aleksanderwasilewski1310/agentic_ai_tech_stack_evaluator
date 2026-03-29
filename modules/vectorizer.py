@@ -29,7 +29,6 @@ def process_ai_response(raw_text: str) -> List[float]:
         return [0.0, 0.0, 0.0, float(len(raw_text))]
 
     # Extract language (default to 'text') and clean up code content
-    language = (match.group(1) or "text").lower()
     code_content = match.group(2).strip()
 
     # Extract description by removing the code block from the original text

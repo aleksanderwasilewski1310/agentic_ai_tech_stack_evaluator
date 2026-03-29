@@ -1,8 +1,10 @@
 """
 Unit tests for the vectorizer module.
-Verifies that the embedding pipeline correctly transforms agent 
+Verifies that the embedding pipeline correctly transforms agent
 responses into numerical vectors for PostgreSQL storage.
 """
+
+# pylint: disable=no-name-in-module
 import pytest
 
 # Standard import - will work if pytest is run from the root directory
@@ -31,8 +33,8 @@ def test_process_ai_response_python():
     ```
     """
     vector = process_ai_response(python_input)
-    assert vector[0] == 5.0  # LOC
-    assert vector[1] == 2.0  # def, for
+    assert vector[0] == 5.0  # LOC # nosec
+    assert vector[1] == 2.0  # def, for # nosec
 
 
 def test_process_ai_response_vba():
@@ -48,13 +50,13 @@ def test_process_ai_response_vba():
     ```
     """
     vector = process_ai_response(vba_input)
-    assert vector[0] == 6.0
-    assert vector[1] >= 4.0  # Sub, Dim, For, If
+    assert vector[0] == 6.0  # nosec
+    assert vector[1] >= 4.0  # Sub, Dim, For, If # nosec
 
 
 def test_process_ai_response_no_code():
     """Test case for responses without code blocks."""
     text_input = "No code here."
     vector = process_ai_response(text_input)
-    assert vector[0] == 0.0
-    assert vector[3] == float(len(text_input))
+    assert vector[0] == 0.0 # nosec
+    assert vector[3] == float(len(text_input)) # nosec
