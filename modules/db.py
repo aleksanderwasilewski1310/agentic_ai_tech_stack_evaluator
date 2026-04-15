@@ -9,7 +9,7 @@ from pgvector.psycopg2 import register_vector
 import numpy as np
 
 # Logger configuration
-logger = logging.getLogger("AI-Agent.DB")
+LOGGER = logging.getLogger("AI-Agent.DB")
 
 load_dotenv()
 
@@ -29,7 +29,7 @@ def push_ai_data_to_db(ai_data):
     tf_model_output = ai_data["tf_model_output"]
     tokens_used = ai_data["tokens_used"]
     try:
-        logger.info("Attempting to store AI data in the Vault...")
+        LOGGER.info("Attempting to store AI data in the Vault...")
         # 1. Connection (note the port 5433!)
         conn = psycopg2.connect(
             host=os.getenv("DB_HOST", "db"),
@@ -60,11 +60,12 @@ def push_ai_data_to_db(ai_data):
         )
 
         conn.commit()
-        logger.info("✅ Successfully stored result for stack: %s (Confidence: %.2f)", stack.upper(), confidence)
+        LOGGER.info("✅ Successfully stored result for stack: %s (Confidence: %.2f)",
+                     stack.upper(), confidence)
     except psycopg2.Error as error:
-        logger.error("❌ PostgreSQL error during insert: %s", error)
+        LOGGER.error("❌ PostgreSQL error during insert: %s", error)
     except Exception as error: # pylint: disable=broad-except
-        logger.error("❌ Unexpected error during DB push: %s", error)
+        LOGGER.error("❌ Unexpected error during DB push: %s", error)
     finally:
         if cur:
             cur.close()
@@ -85,7 +86,7 @@ def find_similar_query_and_distance(query_embedding, threshold=0.1):
     distance = None
 
     try:
-        logger.info("Connecting to DB for semantic search (threshold: %.2f)...", threshold)
+        LOGGER.info("Connecting to DB for semantic search (threshold: %.2f)...", threshold)
 
         # Establish connection using environment variables
         conn = psycopg2.connect(
@@ -116,13 +117,13 @@ def find_similar_query_and_distance(query_embedding, threshold=0.1):
         if result:
             similar_solution = result[0]
             distance = result[1]
-            logger.info("🔍 Semantic Cache HIT! Distance: %.4f", distance)
+            LOGGER.info("🔍 Semantic Cache HIT! Distance: %.4f", distance)
         else:
-            logger.info("⚪ Semantic Cache MISS - no similar queries found.")
+            LOGGER.info("⚪ Semantic Cache MISS - no similar queries found.")
     except psycopg2.Error as error:
-        logger.error("❌ PostgreSQL error during search: %s", error)
+        LOGGER.error("❌ PostgreSQL error during search: %s", error)
     except Exception as error: # pylint: disable=broad-except
-        logger.error("❌ Unexpected error during semantic search: %s", error)
+        LOGGER.error("❌ Unexpected error during semantic search: %s", error)
     finally:
         if cur:
             cur.close()
