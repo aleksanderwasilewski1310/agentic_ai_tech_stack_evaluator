@@ -61,7 +61,7 @@ def push_ai_data_to_db(ai_data):
 
         conn.commit()
         LOGGER.info("✅ Successfully stored result for stack: %s (Confidence: %.2f)",
-                     stack.upper(), confidence)
+                    stack.upper(), confidence)
     except psycopg2.Error as error:
         LOGGER.error("❌ PostgreSQL error during insert: %s", error)
     except Exception as error: # pylint: disable=broad-except
