@@ -22,7 +22,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     datefmt="%H:%M:%S"
 )
-logger = logging.getLogger("AI-Agent")
+LOGGER = logging.getLogger("AI-Agent")
 
 load_dotenv()
 
@@ -103,7 +103,7 @@ def get_tokens(reply: AIMessage, classifier_type: str):
         if reply.usage_metadata:
             usage = reply.usage_metadata
             tokens_used = usage["total_tokens"]
-            logger.info("Tokens used by %s: %d", classifier_type, tokens_used)
+            LOGGER.info("Tokens used by %s: %d", classifier_type, tokens_used)
     return tokens_used
 
 
@@ -114,22 +114,22 @@ def check_cache_and_context(state: State):
     - Distance 0.1 - 0.3 (70-90% similarity): Injects found solution as context for the LLM.
     """
     user_query = state["messages"][-1].content
-    logger.info("Checking semantic cache for query: %s", user_query[:50] + "...")
+    LOGGER.info("Checking semantic cache for query: %s", user_query[:50] + "...")
     query_embedding = EMBEDDINGS_MODEL.embed_query(user_query)
 
     # We need a modified DB function that returns both solution and distance
     solution, distance = find_similar_query_and_distance(query_embedding)
 
     if solution:
-        logger.info("Found similar query with distance: %.4f", distance)
+        LOGGER.info("Found similar query with distance: %.4f", distance)
         if distance < 0.1:
-            logger.info("Cache HIT (High confidence)")
+            LOGGER.info("Cache HIT (High confidence)")
             return {"cached_response": solution, "similar_context": None}
         if distance < 0.3:
-            logger.info("Partial semantic match - providing context")
+            LOGGER.info("Partial semantic match - providing context")
             return {"cached_response": None, "similar_context": solution}
-        
-    logger.info("Cache MISS")
+
+    LOGGER.info("Cache MISS")
     return {"cached_response": None, "similar_context": None}
 
 
@@ -186,7 +186,7 @@ def classify_message(state: State):
         ]
     )
     get_tokens(result, "classifier")
-    logger.info("Classifier result: %s", result.message_type)
+    LOGGER.info("Classifier result: %s", result.message_type)
     return {"message_type": result.message_type}
 
 
@@ -227,7 +227,7 @@ def router(state: State):
         dict: A dictionary with the "next" key specifying the destination node.
     """
     message_type = state.get("message_type", "vba")
-    logger.info("Routing to specialized agent: %s", message_type)
+    LOGGER.info("Routing to specialized agent: %s", message_type)
     if message_type == "r":
         return {"next": "r"}
     if message_type == "python":
@@ -252,7 +252,7 @@ def python_agent(state: State):
         dict: An update to the state messages with the assistant's Python
               solution and associated token usage metadata.
     """
-    logger.info("Starting Python agent processing")
+    LOGGER.info("Starting Python agent processing")
     last_message = state["messages"][-1]
 
     messages = [
@@ -290,7 +290,7 @@ def r_agent(state: State):
         dict: An update to the state messages with the assistant's R
               solution and associated token usage metadata.
     """
-    logger.info("Starting R agent processing")
+    LOGGER.info("Starting R agent processing")
     last_message = state["messages"][-1]
 
     messages = [
@@ -328,7 +328,7 @@ def vba_agent(state: State):
         dict: An update to the state messages with the assistant's VBA
               solution and associated token usage metadata.
     """
-    logger.info("Starting VBA agent processing")
+    LOGGER.info("Starting VBA agent processing")
     last_message = state["messages"][-1]
 
     messages = [
@@ -365,7 +365,7 @@ def vectonize_code(state: State):
         dict: A dictionary update containing the 'vector' field with the
               flattened numerical embedding.
     """
-    logger.info("Vectorizing AI response for long-term vault")
+    LOGGER.info("Vectorizing AI response for long-term vault")
     last_message = state["messages"][-1].content
     vector_data = process_ai_response(last_message)
     numpy_method = getattr(vector_data, "numpy", None)
@@ -412,7 +412,7 @@ def run_chatbot():
     """
     Runs the main chatbot
     """
-    logger.info("--- Agentic AI Tech Stack Evaluator Started ---")
+    LOGGER.info("--- Agentic AI Tech Stack Evaluator Started ---")
     while True:
         user_input = input("Message (type exit to close): ")  # nosec
         if user_input.lower() == "exit":
