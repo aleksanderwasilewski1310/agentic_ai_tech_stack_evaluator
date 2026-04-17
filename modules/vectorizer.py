@@ -1,4 +1,5 @@
 """Module for code complexity analysis"""
+
 import re
 from typing import List
 

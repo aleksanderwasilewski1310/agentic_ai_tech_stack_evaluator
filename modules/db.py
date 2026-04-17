@@ -49,7 +49,7 @@ def push_ai_data_to_db(ai_data):
         # 3. SQL INSERT
         insert_query = """
         INSERT INTO tech_stack_evals (
-            query_text, detected_stack, solution_code, 
+            query_text, detected_stack, solution_code,
             azure_embedding, tf_logic_embedding, tf_confidence_score, token_used
         ) VALUES (%s, %s, %s, %s, %s, %s, %s);
         """
@@ -60,11 +60,14 @@ def push_ai_data_to_db(ai_data):
         )
 
         conn.commit()
-        LOGGER.info("✅ Successfully stored result for stack: %s (Confidence: %.2f)",
-                    stack.upper(), confidence)
+        LOGGER.info(
+            "✅ Successfully stored result for stack: %s (Confidence: %.2f)",
+            stack.upper(),
+            confidence,
+        )
     except psycopg2.Error as error:
         LOGGER.error("❌ PostgreSQL error during insert: %s", error)
-    except Exception as error: # pylint: disable=broad-except
+    except Exception as error:  # pylint: disable=broad-except
         LOGGER.error("❌ Unexpected error during DB push: %s", error)
     finally:
         if cur:
@@ -86,7 +89,9 @@ def find_similar_query_and_distance(query_embedding, threshold=0.1):
     distance = None
 
     try:
-        LOGGER.info("Connecting to DB for semantic search (threshold: %.2f)...", threshold)
+        LOGGER.info(
+            "Connecting to DB for semantic search (threshold: %.2f)...", threshold
+        )
 
         # Establish connection using environment variables
         conn = psycopg2.connect(
@@ -122,7 +127,7 @@ def find_similar_query_and_distance(query_embedding, threshold=0.1):
             LOGGER.info("⚪ Semantic Cache MISS - no similar queries found.")
     except psycopg2.Error as error:
         LOGGER.error("❌ PostgreSQL error during search: %s", error)
-    except Exception as error: # pylint: disable=broad-except
+    except Exception as error:  # pylint: disable=broad-except
         LOGGER.error("❌ Unexpected error during semantic search: %s", error)
     finally:
         if cur:
