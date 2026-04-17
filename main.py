@@ -20,7 +20,7 @@ from modules.vectorizer import process_ai_response
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    datefmt="%H:%M:%S"
+    datefmt="%H:%M:%S",
 )
 LOGGER = logging.getLogger("AI-Agent")
 
@@ -156,17 +156,17 @@ def classify_message(state: State):
     system_prompt = """Based on the description provided and following pros for each languages
                        classify if the Tool should be Prepared in:
                     - 'vba': VBA is tightly integrated with Microsoft Office applications like Excel,
-                     making it ideal for automating repetitive tasks and building quick macros within these environments. 
-                     It requires minimal setup and is accessible to users familiar with Excel but less experienced in programming.  
+                     making it ideal for automating repetitive tasks and building quick macros within these environments.
+                     It requires minimal setup and is accessible to users familiar with Excel but less experienced in programming.
                      However, it is less versatile and powerful for complex data analysis compared to Python and R.
-                    - 'r': R is specifically designed for statistical analysis and visualization,  
-                     providing a rich ecosystem of packages tailored for advanced statistical modeling and data science.  
+                    - 'r': R is specifically designed for statistical analysis and visualization,
+                     providing a rich ecosystem of packages tailored for advanced statistical modeling and data science.
                      It excels in exploratory data analysis and producing publication-quality graphics,
-                       often preferred by statisticians and researchers over Python and VBA.  
+                       often preferred by statisticians and researchers over Python and VBA.
                      While less general-purpose than Python, R’s specialized tools make it powerful for in-depth statistical work..
                     - 'python': Python offers a versatile, easy-to-learn syntax with extensive libraries for data analysis,
                      machine learning, and automation, making it suitable for a wide range of applications beyond just data tasks.
-                     It has strong community support and integrates well with other systems,  
+                     It has strong community support and integrates well with other systems,
                      outperforming VBA in scalability and R in general-purpose programming.
                        Python’s flexibility makes it a top choice
                          for both beginners and advanced users."""

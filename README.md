@@ -217,7 +217,7 @@ The system follows a **Modular Router-Agent Architecture**:
 This is the fastest way to ensure environment consistency.
 
 1. **Clone Repository**
-    
+
      ```Bash
     git clone [https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator.git](https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator.git)
     cd agentic_ai_tech_stack_evaluator

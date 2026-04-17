@@ -18,20 +18,20 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TABLE tech_stack_evals (
     id SERIAL PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     -- Textual Data
     query_text TEXT NOT NULL,         -- Original user prompt/input
     detected_stack VARCHAR(20),       -- e.g., 'vba', 'python', 'r'
     solution_code TEXT,               -- Generated solution or code snippet
-    
+
     -- Vector 1: Azure OpenAI (Language Semantics)
     -- Captures "what" the user intends to achieve
     azure_embedding vector(512),
-    
+
     -- Vector 2: TensorFlow Model (Logic & Structure)
     -- Captures "how" the code is structured (Custom logic assessment)
     tf_logic_embedding vector(4),
-    
+
     -- Numerical Metrics from the TensorFlow Model
     tf_confidence_score FLOAT,        -- Model's certainty level
     logic_complexity_score FLOAT,      -- e.g., Problem difficulty rating
