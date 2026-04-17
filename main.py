@@ -102,7 +102,7 @@ class State(TypedDict):
     wait=wait_exponential(multiplier=1, min=2, max=10),  # Wait 2s, 4s, 8s...
     retry=retry_if_exception_type(Exception),
     before_sleep=lambda retry_state: LOGGER.warning(
-        f"LLM Connection failed. Retrying... (Attempt {retry_state.attempt_number})"
+        "LLM Call failed. Retrying... (Attempt %s)", retry_state.attempt_number
     ),
 )
 def safe_llm_call(func, *args, **kwargs):
