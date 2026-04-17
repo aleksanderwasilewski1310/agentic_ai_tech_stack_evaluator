@@ -4,6 +4,12 @@
 # pylint: disable=no-name-in-module
 import logging
 import os
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+)
 from typing import Annotated, Literal
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, START, END
@@ -89,6 +95,19 @@ class State(TypedDict):
     vector: list | None
     cached_response: str | None  # 90%+ matches
     similar_context: str | None  # 70-89% matches
+
+
+@retry(
+    stop=stop_after_attempt(3),  # Try max 3 times
+    wait=wait_exponential(multiplier=1, min=2, max=10),  # Wait 2s, 4s, 8s...
+    retry=retry_if_exception_type(Exception),
+    before_sleep=lambda retry_state: LOGGER.warning(
+        f"LLM Connection failed. Retrying... (Attempt {retry_state.attempt_number})"
+    ),
+)
+def safe_llm_call(func, *args, **kwargs):
+    """Generic wrapper to run any LLM-related call with retry logic."""
+    return func(*args, **kwargs)
 
 
 def get_tokens(reply: AIMessage, classifier_type: str):
@@ -179,11 +198,12 @@ def classify_message(state: State):
         )
 
     classifier_llm = LLM.with_structured_output(MessageClassifier)
-    result = classifier_llm.invoke(
+    result = safe_llm_call(
+        classifier_llm.invoke,
         [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": last_message.content},
-        ]
+        ],
     )
     get_tokens(result, "classifier")
     LOGGER.info("Classifier result: %s", result.message_type)
@@ -264,7 +284,7 @@ def python_agent(state: State):
         },
         {"role": "user", "content": last_message.content},
     ]
-    reply = LLM.invoke(messages)
+    reply = safe_llm_call(LLM.invoke, messages)
     tokens_used = get_tokens(reply, "python agent")
     return {
         "messages": [
@@ -302,7 +322,7 @@ def r_agent(state: State):
         },
         {"role": "user", "content": last_message.content},
     ]
-    reply = LLM.invoke(messages)
+    reply = safe_llm_call(LLM.invoke, messages)
     tokens_used = get_tokens(reply, "r agent")
     return {
         "messages": [
@@ -340,7 +360,7 @@ def vba_agent(state: State):
         },
         {"role": "user", "content": last_message.content},
     ]
-    reply = LLM.invoke(messages)
+    reply = safe_llm_call(LLM.invoke, messages)
     tokens_used = get_tokens(reply, "vba agent")
     return {
         "messages": [
