@@ -3,6 +3,7 @@ AI Agent Infrastructure with FastAPI & Chainlit Integration.
 Focus: Multi-agent routing, semantic caching, and asynchronous interface.
 """
 
+# pylint: disable=import-error
 import asyncio
 import chainlit as cl
 from fastapi import FastAPI
