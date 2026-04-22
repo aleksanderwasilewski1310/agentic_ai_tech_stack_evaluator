@@ -239,12 +239,16 @@ This is the fastest way to ensure environment consistency.
    docker compose up --build
     ```
    
-4. **Detach by typing "D".**
-   
-5. **Run the interactive agent:**
+4. **Open your browser:**
+    Go to http://localhost:8000.
 
+5. **Start Chatting:**
+   The UI will automatically connect to the running LangGraph engine.
+
+6 **Monitor Logs (Optional):**
+    If you want to see what's happening under the hood (e.g., database inserts or routing decisions), run:
     ```Bash
-    docker attach agentic_ai_tech_stack_evaluator-server-1
+    docker compose logs -f server
     ```
 
 ### Local Installation
