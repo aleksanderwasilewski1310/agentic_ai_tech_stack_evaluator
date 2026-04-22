@@ -190,6 +190,8 @@ Important Note: Make sure the placeholders (text, charts, and table formats) in 
 
 ## 🛠 Tech Stack & Engineering Standards
 - **Framework:** `LangGraph` (Directed Acyclic Graphs with Cyclic State Management)
+- **Interface:** `Chainlit` – Asynchronous, production-grade UI for real-time agentic reasoning and Mermaid-based workflow visualization.
+- **API Layer:** `FastAPI` – High-performance RESTful interface for headless integration and microservices orchestration.
 - **Validation:** `Pydantic v2` for Strict Structured Output and Type Safety
 - **LLM:** `AzureChatOpenAI` (Integrated via **Poland Central** region for minimal latency)
 - **Vector Database:** `PostgreSQL` with `pgvector` – Custom-built hybrid storage for persistent semantic memory, featuring HNSW indexing for high-performance      similarity searches.
