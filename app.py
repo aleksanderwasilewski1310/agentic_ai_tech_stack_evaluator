@@ -101,6 +101,12 @@ async def on_message(message: cl.Message):
 
 @APP.post("/v1/predict")
 async def predict(request: ChatRequest):
+    """
+    Handle external AI agent queries via REST API.
+
+    Processes the user input through the LangGraph orchestration flow,
+    checks for semantic cache hits, and returns the generated solution.
+    """
     initial_state = {"messages": [{"role": "user", "content": request.query}]}
     result = await GRAPH.ainvoke(initial_state)
 
