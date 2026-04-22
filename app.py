@@ -11,10 +11,14 @@ from main import GRAPH, EMBEDDINGS_MODEL, push_ai_data_to_db
 
 # --- [FASTAPI INITIALIZATION] ---
 # Creating an API entry point for external microservices integration
-app = FastAPI(title="AI Stack Evaluator API")
+APP = FastAPI(title="AI Stack Evaluator API")
 
 
 class ChatRequest(BaseModel):
+    """
+    Chat Request Class
+    """
+
     query: str
 
 
@@ -96,7 +100,7 @@ async def on_message(message: cl.Message):
 # Providing a RESTful interface for headless integration
 
 
-@app.post("/v1/predict")
+@APP.post("/v1/predict")
 async def predict(request: ChatRequest):
     """
     Production REST endpoint.
