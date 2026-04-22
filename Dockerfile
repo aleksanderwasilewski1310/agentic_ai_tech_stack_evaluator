@@ -31,7 +31,9 @@ RUN adduser \
     appuser
 USER root
 
-RUN mkdir -p /app/.files && chmod 777 /app/.files
+RUN mkdir -p /app/.chainlit /app/.files
+
+RUN chmod -R 777 /app/.chainlit /app/.files
 
 RUN apt-get update && apt-get install -y \
     curl \
