@@ -30,6 +30,9 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 USER root
+
+RUN mkdir -p /app/.files && chmod 777 /app/.files
+
 RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -52,4 +55,4 @@ COPY . .
 EXPOSE 8000
 
 # Run the application.
-CMD python main.py
+CMD ["chainlit", "run", "app.py", "--host", "0.0.0.0", "--port", "8000"]
