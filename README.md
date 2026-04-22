@@ -245,7 +245,7 @@ This is the fastest way to ensure environment consistency.
 5. **Start Chatting:**
    The UI will automatically connect to the running LangGraph engine.
 
-6 **Monitor Logs (Optional):**
+6. **Monitor Logs (Optional):**
     If you want to see what's happening under the hood (e.g., database inserts or routing decisions), run:
     ```Bash
     docker compose logs -f server
