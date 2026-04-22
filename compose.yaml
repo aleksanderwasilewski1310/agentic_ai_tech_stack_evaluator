@@ -14,6 +14,21 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+  # --- API LAYER (FastAPI) ---
+  api:
+    build: .
+    container_name: ai_evaluator_api
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    # We use uvicorn to run the separate api.py file
+    command: uvicorn api:app --host 0.0.0.0 --port 8001
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+
   db:
     image: pgvector/pgvector:pg16
     restart: always

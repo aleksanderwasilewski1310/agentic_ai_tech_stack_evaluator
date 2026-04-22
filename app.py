@@ -6,13 +6,8 @@ Focus: Multi-agent routing, semantic caching, and asynchronous interface.
 # pylint: disable=import-error
 import asyncio
 import chainlit as cl
-from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from main import GRAPH, EMBEDDINGS_MODEL, push_ai_data_to_db
-
-# --- [FASTAPI INITIALIZATION] ---
-# Creating an API entry point for external microservices integration
-APP = FastAPI(title="AI Stack Evaluator API")
 
 
 # pylint: disable=too-few-public-methods
@@ -94,31 +89,3 @@ async def on_message(message: cl.Message):
         loop.run_in_executor(None, push_ai_data_to_db, ai_data)
 
     await cl.Message(content=response).send()
-
-
-# --- [FASTAPI ENDPOINT] ---
-# Providing a RESTful interface for headless integration
-
-
-@APP.post("/v1/predict")
-async def predict(request: ChatRequest):
-    """
-    Handle external AI agent queries via REST API.
-
-    Processes the user input through the LangGraph orchestration flow,
-    checks for semantic cache hits, and returns the generated solution.
-    """
-    initial_state = {"messages": [{"role": "user", "content": request.query}]}
-    result = await GRAPH.ainvoke(initial_state)
-
-    # Extract the solution logic outside the dictionary for clarity
-    is_cached = bool(result.get("cached_response"))
-    answer = (
-        result.get("cached_response") if is_cached else result["messages"][-1].content
-    )
-
-    return {
-        "stack": result.get("message_type"),
-        "cached": is_cached,
-        "answer": answer,
-    }
