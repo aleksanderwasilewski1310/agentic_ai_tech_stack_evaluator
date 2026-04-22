@@ -1,8 +1,10 @@
 """
 AI Agent REST API Layer.
-Provides an interface for external microservices to interact with the LangGraph orchestration engine.
+Provides an interface for external microservices
+to interact with the LangGraph orchestration engine.
 """
 
+# pylint: disable=import-error
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from main import GRAPH
@@ -10,13 +12,15 @@ from main import GRAPH
 # Initialize the FastAPI application independently of the Chainlit UI
 # This separation ensures that the OpenAPI schema generation is not corrupted
 # by UI-specific middleware or authentication cookie handlers.
-app = FastAPI(
+APP = FastAPI(
     title="Agentic AI Evaluation API",
-    description="RESTful interface for cross-platform technology stack evaluation and semantic reasoning.",
+    description="RESTful interface for cross-platform technology"
+    " stack evaluation and semantic reasoning.",
     version="1.0.0",
 )
 
 
+# pylint: disable=too-few-public-methods
 class ChatRequest(BaseModel):
     """
     Schema for the incoming prediction requests.
@@ -32,7 +36,7 @@ class ChatRequest(BaseModel):
     )
 
 
-@app.post("/predict")
+@APP.post("/predict")
 async def predict(request: ChatRequest):
     """
     Primary inference endpoint for the AI Agent.
