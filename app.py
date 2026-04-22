@@ -6,7 +6,7 @@ Focus: Multi-agent routing, semantic caching, and asynchronous interface.
 import asyncio
 import chainlit as cl
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from main import GRAPH, EMBEDDINGS_MODEL, push_ai_data_to_db
 
 # --- [FASTAPI INITIALIZATION] ---
@@ -14,12 +14,11 @@ from main import GRAPH, EMBEDDINGS_MODEL, push_ai_data_to_db
 APP = FastAPI(title="AI Stack Evaluator API")
 
 
+# pylint: disable=too-few-public-methods
 class ChatRequest(BaseModel):
-    """
-    Chat Request Class
-    """
+    """Schema for the input query sent to the AI Agent."""
 
-    query: str
+    query: str = Field(..., example="How to create an Excel macro for data cleaning?")
 
 
 # --- [CHAINLIT INTEGRATION - ASYNC UI] ---
@@ -102,18 +101,17 @@ async def on_message(message: cl.Message):
 
 @APP.post("/v1/predict")
 async def predict(request: ChatRequest):
-    """
-    Production REST endpoint.
-    Ideal for integration with CI/CD pipelines or external legacy systems.
-    """
     initial_state = {"messages": [{"role": "user", "content": request.query}]}
-    # Synchronous or Asynchronous invocation depending on deployment requirements
     result = await GRAPH.ainvoke(initial_state)
+
+    # Extract the solution logic outside the dictionary for clarity
+    is_cached = bool(result.get("cached_response"))
+    answer = (
+        result.get("cached_response") if is_cached else result["messages"][-1].content
+    )
 
     return {
         "stack": result.get("message_type"),
-        "cached": bool(result.get("cached_response")),
-        "answer": result["messages"][-1].content
-        if not result.get("cached_response")
-        else result.get("cached_response"),
+        "cached": is_cached,
+        "answer": answer,
     }
