@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-evaluator-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-evaluator
+  template:
+    metadata:
+      labels:
+        app: agent-evaluator
+    spec:
+      containers:
+      - name: agent-evaluator-container
+        image: agenticaievaluator.azurecr.io/agent-evaluator:v1
+        ports:
+        - containerPort: 8000
+        env:
+        - name: AZURE_OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-keys
+              key: AZURE_OPENAI_API_KEY
+        - name: AZURE_OPENAI_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: ai-keys
+              key: AZURE_OPENAI_ENDPOINT
+        - name: AZURE_OPENAI_DEPLOYMENT_NAME
+          valueFrom:
+            secretKeyRef:
+              name: ai-keys
+              key: AZURE_OPENAI_DEPLOYMENT_NAME
+        - name: EMBEDDING_DEPLOYMENT_NAME
+          valueFrom:
+            secretKeyRef:
+              name: ai-keys
+              key: EMBEDDING_DEPLOYMENT_NAME
+        - name: EMBEDDING_API_VERSION
+          valueFrom:
+            secretKeyRef:
+              name: ai-keys
+              key: EMBEDDING_API_VERSION
+        - name: OPENAI_API_VERSION
+          valueFrom:
+            secretKeyRef:
+              name: ai-keys
+              key: OPENAI_API_VERSION
