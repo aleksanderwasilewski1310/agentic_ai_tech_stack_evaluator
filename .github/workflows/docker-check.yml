@@ -12,17 +12,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout (v4.1.1)
+      # 1. Checkout repository (v4.1.7)
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      # 2. Set up Docker Buildx (v3.0.0)
+      # 2. Set up Docker Buildx (v3.5.0)
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f9213376d62052c7c097378a17e57ddd6e8bb7d2 # v3.0.0
+        uses: docker/setup-buildx-action@aaae598d519c1213af502916b6c6bd3839e083a2 # v3.5.0
 
-      # 3. Build the Docker image (v5.0.0)
+      # 3. Build the Docker image (v6.5.0)
       - name: Build Docker image
-        uses: docker/build-push-action@4a13e500e55cf1296549590bc594910ee2d416f1 # v5.0.0
+        uses: docker/build-push-action@5176d81f87c2b0f169c7cdbf73090c5800d0c18e # v6.5.0
         with:
           context: .
           file: ./Dockerfile
