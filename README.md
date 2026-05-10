@@ -197,6 +197,7 @@ Important Note: Make sure the placeholders (text, charts, and table formats) in 
 - **Vector Database:** `PostgreSQL` with `pgvector` – Custom-built hybrid storage for persistent semantic memory, featuring HNSW indexing for high-performance      similarity searches.
 - **Embeddings:** `AzureOpenAIEmbeddings` (`text-embedding-3-small`) – High-dimensional semantic representation (512-dim) for multi-language query alignment.
 - **Containerization:** `Docker` & `Docker Compose` for environment parity.
+- **Orchestration:** `Kubernetes` (AKS ready) – Production-grade deployment manifests for scalability and self-healing.
 - **State Management:** `TypedDict` with `Annotated` message history for full traceability.
 
 ---
