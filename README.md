@@ -23,7 +23,7 @@ graph TD
 
     %% Main Flow
     Start([🚀 start]) --> CheckCache{🔍 check_cache}
-    
+
     %% Semantic Cache & RAG Logic
     CheckCache -- "Hit (Dist < 0.1)" --> End([🏁 end])
     CheckCache -- "Miss (Dist > 0.1)" --> Classifier[🤖 classifier]
@@ -58,7 +58,7 @@ graph TD
     class PythonAgent,RAgent,VBAAgent agent;
     class Storage db;
 ```
-    
+
 The system features a Multi-Tier Semantic Memory powered by pgvector in PostgreSQL. This architecture solves the common LLM challenges of high latency and redundant token costs:
 
 Tier 1: Semantic Cache (Distance < 0.1): If a query has >90% similarity with a previously answered question, the system performs a Direct Cache Hit, returning the stored solution instantly without calling the LLM.
@@ -241,7 +241,7 @@ This is the fastest way to ensure environment consistency.
    ```bash
    docker compose up --build
     ```
-   
+
 4. **Open your browser:**
     Go to http://localhost:8000.
 
