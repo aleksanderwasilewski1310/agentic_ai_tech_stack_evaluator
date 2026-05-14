@@ -6,14 +6,15 @@ Description: This server acts as a technical gatekeeper and analyzer
              and prepares templates for cloud-native modernization.
 """
 
+# pylint: disable=import-error
 from mcp.server.fastmcp import FastMCP
 
 # Initialize FastMCP server named "Request-Analyzer"
-mcp = FastMCP("Request-Analyzer")
+MCP = FastMCP("Request-Analyzer")
 
 
 # --- [ TOOL 1: INPUT VALIDATOR ] ---
-@mcp.tool()
+@MCP.tool()
 def validate_business_intent(query: str) -> str:
     """
     Analyzes the user input to distinguish between professional
@@ -55,4 +56,4 @@ def validate_business_intent(query: str) -> str:
 
 
 if __name__ == "__main__":
-    mcp.run()
+    MCP.run()

@@ -48,7 +48,8 @@ async def on_message(message: cl.Message):
     if "REJECTED" in validation_result:
         await cl.Message(
             content=f"""⚠️ **[MCP GUARDRAIL]**\n{validation_result}\n\n*Please provide
-              a technical or business-related problem (e.g., 'Please help me write a python function to sum numbers in column').*"""
+              a technical or business-related problem
+                (e.g., 'Please help me write a python function to sum numbers in column').*"""
         ).send()
         return  # Early exit to save Azure OpenAI tokens and AKS compute
 

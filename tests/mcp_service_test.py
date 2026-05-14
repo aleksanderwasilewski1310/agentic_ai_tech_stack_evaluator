@@ -1,5 +1,6 @@
 """Unit tests for mcp_service module"""
 
+# pylint: disable=import-error
 import pytest
 
 try:
@@ -38,4 +39,4 @@ def test_validate_business_intent(query, expected_status):
     from general noise.
     """
     result = validate_business_intent(query)
-    assert expected_status in result
+    assert expected_status in result  # nosec
