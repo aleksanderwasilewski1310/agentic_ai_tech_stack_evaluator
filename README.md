@@ -16,49 +16,45 @@ It uses a multi-agent system (built with LangGraph and Azure OpenAI) to:
 graph TD
     %% Node Style Definitions
     classDef startend fill:#f9f9f9,stroke:#333,stroke-width:2px,color:black;
+    classDef mcp fill:#ffecb3,stroke:#ffa000,stroke-width:2px,color:black;
     classDef proc fill:#e3f2fd,stroke:#1565c0,stroke-width:1px,color:black;
     classDef router fill:#fff9c4,stroke:#fbc02d,stroke-width:1px,color:black;
     classDef agent fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px,color:black;
-    classDef db fill:#f5f5f5,stroke:#666,stroke-width:1px,stroke-dasharray: 5 5,color:black;
 
-    %% Main Flow
-    Start([🚀 start]) --> CheckCache{🔍 check_cache}
+    %% Main Flow with MCP
+    Start([🚀 Start]) --> MCP{🛡️ MCP Guardrail}
+    MCP -- "Noise/Off-topic" --> Reject([🛑 Reject & Notify])
+    MCP -- "Valid Business Case" --> CheckCache{🔍 check_cache}
 
-    %% Semantic Cache & RAG Logic
-    CheckCache -- "Hit (Dist < 0.1)" --> End([🏁 end])
-    CheckCache -- "Miss (Dist > 0.1)" --> Classifier[🤖 classifier]
-
-    %% Routing
-    Classifier --> Router{🔀 router}
+    %% Rest of the flow...
+    CheckCache -- "Hit" --> End([🏁 End])
+    CheckCache -- "Miss" --> Classifier[🤖 Classifier]
+    Classifier --> Router{🔀 Router}
 
     %% Agents
-    Router -- "python" --> PythonAgent[🐍 python_agent]
-    Router -- "r" --> RAgent[📊 r_agent]
-    Router -- "vba" --> VBAAgent[📉 vba_agent]
+    Router -- "python" --> PythonAgent[🐍 Python Agent]
+    Router -- "r" --> RAgent[📊 R Agent]
+    Router -- "vba" --> VBAAgent[📉 VBA Agent]
 
-    %% Post-processing
-    PythonAgent --> Vectorizer[🔢 vectonizer]
+    PythonAgent --> Vectorizer[🔢 Vectorizer]
     RAgent --> Vectorizer
     VBAAgent --> Vectorizer
     Vectorizer --> End
 
-    %% Persistence Layer (Database)
-    subgraph Vault [🗄️ PostgreSQL + pgvector]
-        Storage[(Semantic Storage)]
-    end
-
-    %% Connections to Database
-    CheckCache -.-> Storage
-    Vectorizer -.-> Storage
-
-    %% Applying Styles
-    class Start,End startend;
+    class Start,End,Reject startend;
+    class MCP mcp;
     class Classifier,Vectorizer proc;
     class Router,CheckCache router;
     class PythonAgent,RAgent,VBAAgent agent;
-    class Storage db;
 ```
+🛡️ Layer 0: Agentic Governance (MCP Guardrail)
+Before reaching the Semantic Memory, every query passes through a Model Context Protocol (MCP) validation layer. This architectural decision ensures that only high-quality, relevant data consumes system resources:
 
+Intent Validation: Using a custom MCP server to filter out "noise" and non-business queries, reducing unnecessary LLM calls by filtering at the protocol level.
+
+Operational Readiness: The MCP layer verifies if the request contains necessary action verbs (e.g., create, develop, refactor) and technical context, acting as a programmable firewall for the Agentic Workflow.
+
+🧠 Advanced Architecture: Multi-Tier Semantic Memory
 The system features a Multi-Tier Semantic Memory powered by pgvector in PostgreSQL. This architecture solves the common LLM challenges of high latency and redundant token costs:
 
 Tier 1: Semantic Cache (Distance < 0.1): If a query has >90% similarity with a previously answered question, the system performs a Direct Cache Hit, returning the stored solution instantly without calling the LLM.
@@ -69,7 +65,7 @@ Tier 3: Autonomous Reasoning (Distance > 0.3): Full agentic orchestration for no
 
 ### 💼 Business Value
 
-* Cost Efficiency: Reduces OpenAI token consumption by up to 80% through semantic caching.
+* Cost Efficiency: Reduces OpenAI token consumption through semantic caching.
 * Architectural Consistency: Injected context prevents "model drift" by following established technology patterns.
 * Migration Accelerator: Automates the decision-making process for migrating legacy Excel/VBA tools to cloud-ready Python/R solutions.
 
@@ -189,6 +185,7 @@ This script handles updates efficiently across numerous presentations and can be
 Important Note: Make sure the placeholders (text, charts, and table formats) in the PowerPoint presentations match the expected format as described in the code to ensure successful updates. Adjust the logic in update_chart and update_table as necessary depending on the specific structure of your presentations.
 
 ## 🛠 Tech Stack & Engineering Standards
+- **Protocol Layer:** `Model Context Protocol (MCP)` – implemented via FastMCP for standardized tool-server communication and query validation.
 - **Framework:** `LangGraph` (Directed Acyclic Graphs with Cyclic State Management)
 - **Interface:** `Chainlit` – Asynchronous, production-grade UI for real-time agentic reasoning and Mermaid-based workflow visualization.
 - **API Layer:** `FastAPI` – High-performance RESTful interface for headless integration and microservices orchestration.
@@ -205,9 +202,10 @@ Important Note: Make sure the placeholders (text, charts, and table formats) in 
 ## 🏗 System Architecture (Agentic Design)
 The system follows a **Modular Router-Agent Architecture**:
 
-1. **Semantic Classifier (Node):** The entry point that decides between Cache, RAG-injection, or Cold Start.
-2. **State-Based Router:** Manages the flow based on semantic distance and classification results.
-3. **Specialized Reasoning Engines (Nodes):**
+1. **Governance Layer (MCP Server):** The frontline "Gatekeeper" using the Model Context Protocol. It validates user intent, filters non-business noise.
+2. **Semantic Classifier (Node):** The entry point that decides between Cache, RAG-injection, or Cold Start.
+3. **State-Based Router:** Manages the flow based on semantic distance and classification results.
+4. **Specialized Reasoning Engines (Nodes):**
     * **Python Agent:** Optimized for scalable data engineering and ML.
     * **R Agent:** Tailored for advanced statistical modeling and visualization.
     * **VBA Agent:** Focused on MS Office integration and legacy automation.

@@ -8,6 +8,7 @@ import asyncio
 import chainlit as cl
 from pydantic import BaseModel, Field
 from main import GRAPH, EMBEDDINGS_MODEL, push_ai_data_to_db
+from modules.mcp_service import validate_business_intent
 
 
 # pylint: disable=too-few-public-methods
@@ -39,6 +40,19 @@ async def on_message(message: cl.Message):
     Main entry point for Chainlit UI.
     Handles async execution of the LangGraph workflow.
     """
+
+    # --- MCP GUARDRAIL VALIDATION ---
+    # If it's a "rejected" case, we stop execution immediately.
+    validation_result = validate_business_intent(message.content)
+
+    if "REJECTED" in validation_result:
+        await cl.Message(
+            content=f"""⚠️ **[MCP GUARDRAIL]**\n{validation_result}\n\n*Please provide
+              a technical or business-related problem
+                (e.g., 'Please help me write a python function to sum numbers in column').*"""
+        ).send()
+        return  # Early exit to save Azure OpenAI tokens and AKS compute
+
     graph = cl.user_session.get("graph")
 
     # Initialize state with the user's message
