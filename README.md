@@ -1,6 +1,12 @@
 
 ## 🚀 Agentic AI Tech Stack Evaluator
 
+[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
+[![Framework](https://img.shields.io/badge/framework-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
+[![Infrastructure](https://img.shields.io/badge/cloud-Azure%20OpenAI-0078d4.svg)](https://azure.microsoft.com/)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator/.github/workflows)
+[![Docker](https://img.shields.io/badge/container-Docker%20%7C%20AKS%20ready-blue.svg)](https://www.docker.com/)
+
 This project is a production-oriented agentic workflow that helps companies decide **when to keep legacy VBA solutions and when to migrate to modern Python/R stacks**.
 
 It uses a multi-agent system (built with LangGraph and Azure OpenAI) to:
@@ -288,10 +294,13 @@ Dynamic State Management: Using TypedDict and Annotated to track message history
 
 Environment Parity: Multi-container setup (App + DB) ensures the system works identically in dev, staging, and production.
 
-### 📈 Future Roadmap
+## 📈 Future Roadmap
 
-* **Dynamic RAG Integration:** Continuous synchronization with PostgreSQL (`pgvector`) to provide up-to-date analysis of the latest Python libraries and frameworks.
-* **LangSmith Observability:** Implementation of full-chain tracing and latency monitoring for enterprise-grade auditing and performance optimization.
-* **Cloud-Native Deployment:** Containerization using Docker and transitioning to Azure Container Instances (ACI) for scalable, production-ready hosting.
+To transition this system into a highly scalable, production-grade enterprise platform, the following architectural milestones are planned:
+
+* **Production Deployment via Azure Container Apps (ACA) / AKS:** Migrating the current multi-container setup to managed cloud environments (Azure Container Apps for serverless scaling or Azure Kubernetes Service for full orchestration) to ensure high availability and auto-scaling.
+* **Observability & LLM Tracing:** Integrating open-source tools like **Langfuse** or **Arize Phoenix** alongside **Prometheus and Grafana** to track agentic trajectories, latency, semantic cache hit rates, and real-time token cost allocation.
+* **Async Event-Driven Evaluation:** Moving from synchronous API calls to an asynchronous architecture using **Azure Service Bus** or **RabbitMQ** to handle heavy batch evaluation workloads without blocking the primary agent.
+* **Expanded Evaluation Engines:** Developing specialized evaluators for deeper code structural analysis, security vulnerability scanning, and performance profiling of the generated Python/R code.
 
 ### Author: Aleksander Wasilewski
