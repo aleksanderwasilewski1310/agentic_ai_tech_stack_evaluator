@@ -4,7 +4,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/framework-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
 [![Infrastructure](https://img.shields.io/badge/cloud-Azure%20OpenAI-0078d4.svg)](https://azure.microsoft.com/)
-[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator/.github/workflows)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator/tree/main/.github/workflows)
 [![Docker](https://img.shields.io/badge/container-Docker%20%7C%20AKS%20ready-blue.svg)](https://www.docker.com/)
 
 This project is a production-oriented agentic workflow that helps companies decide **when to keep legacy VBA solutions and when to migrate to modern Python/R stacks**.
