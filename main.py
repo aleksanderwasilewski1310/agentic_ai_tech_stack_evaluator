@@ -80,6 +80,7 @@ class State(TypedDict):
     Attributes:
         messages (Annotated[list, add_messages]): Append-only list of conversation
             history including system, user, and assistant messages.
+        system_instructions (str | None): System skills to give precise LLM outputs
         message_type (str | None): The identified technology stack (e.g., 'python',
             'r', 'vba') used for routing.
         vector (list | None): Numerical embedding of the latest assistant response
@@ -91,6 +92,7 @@ class State(TypedDict):
     """
 
     messages: Annotated[list, add_messages]
+    system_instructions: str | None
     message_type: str | None
     vector: list | None
     cached_response: str | None  # 90%+ matches
@@ -124,6 +126,43 @@ def get_tokens(reply: AIMessage, classifier_type: str):
             tokens_used = usage["total_tokens"]
             LOGGER.info("Tokens used by %s: %d", classifier_type, tokens_used)
     return tokens_used
+
+
+def load_skills_node(state: State) -> dict:
+    """
+    Scans the specified directory for Markdown files (.md),
+    reads their contents (the AI skills/prompts), and compiles them
+    into a unified system instruction string.
+    """
+    # Path to your private directory containing skill definitions (e.g., ponytail.md, grill_me.md)
+    skills_dir = "./.github/skills"
+
+    # Base system identity prompt
+    compiled_skills = "You are an elite AI Engineer. You have access to the following specialized skills:\n\n"
+
+    # Dynamically assemble prompts by recursively walking through the skills directory
+    if os.path.exists(skills_dir):
+        # os.walk yields a 3-tuple: (current_dir_path, subdirectories, filenames)
+        for root, _, filenames in os.walk(skills_dir):
+            for filename in filenames:
+                if filename.endswith(".md"):
+                    # os.path.join(root, filename) handles subfolders correctly
+                    file_path = os.path.join(root, filename)
+                    try:
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            compiled_skills += f.read() + "\n\n"
+                        # Log relative path from skills_dir for better readability in logs
+                        rel_path = os.path.relpath(file_path, skills_dir)
+                        LOGGER.info("Skill file %s loaded successfully", rel_path)
+                    except Exception as e:
+                        LOGGER.error(
+                            "Failed to read skill file %s: %s", file_path, str(e)
+                        )
+    else:
+        LOGGER.warning("No folder found at path: %s", skills_dir)
+
+    # Return the updated state slice to the graph
+    return {"system_instructions": compiled_skills}
 
 
 def check_cache_and_context(state: State):
@@ -274,11 +313,11 @@ def python_agent(state: State):
     """
     LOGGER.info("Starting Python agent processing")
     last_message = state["messages"][-1]
-
+    system_instructions = state.get("system_instructions", "") or ""
     messages = [
         {
             "role": "system",
-            "content": """You are a Python Developer.
+            "content": f"""{system_instructions}\nYou are a Python Developer.
                            Prepare a quick python solution for declared problem.
                            Put the code inside markdown.""",
         },
@@ -312,11 +351,11 @@ def r_agent(state: State):
     """
     LOGGER.info("Starting R agent processing")
     last_message = state["messages"][-1]
-
+    system_instructions = state.get("system_instructions", "") or ""
     messages = [
         {
             "role": "system",
-            "content": """You are a R Developer.
+            "content": f"""{system_instructions}\nYou are a R Developer.
                           Prepare a quick R Script solution for declared problem.
                           Put the code inside markdown.""",
         },
@@ -350,11 +389,11 @@ def vba_agent(state: State):
     """
     LOGGER.info("Starting VBA agent processing")
     last_message = state["messages"][-1]
-
+    system_instructions = state.get("system_instructions", "") or ""
     messages = [
         {
             "role": "system",
-            "content": """You are a VBA Developer.
+            "content": f"""{system_instructions}\nYou are a VBA Developer.
                           Prepare a quick VBA Macro Solution for declared problem.
                           Put the code inside markdown.""",
         },
@@ -397,6 +436,7 @@ def vectonize_code(state: State):
 
 GRAPH_BUILDER = StateGraph(State)
 
+GRAPH_BUILDER.add_node("load_skills", load_skills_node)
 GRAPH_BUILDER.add_node("check_cache", check_cache_and_context)
 GRAPH_BUILDER.add_node("classifier", classify_message)
 GRAPH_BUILDER.add_node("python", python_agent)
@@ -405,7 +445,8 @@ GRAPH_BUILDER.add_node("vba", vba_agent)
 GRAPH_BUILDER.add_node("router", router)
 GRAPH_BUILDER.add_node("vectonizer", vectonize_code)
 
-GRAPH_BUILDER.add_edge(START, "check_cache")
+GRAPH_BUILDER.add_edge(START, "load_skills")
+GRAPH_BUILDER.add_edge("load_skills", "check_cache")
 GRAPH_BUILDER.add_edge("classifier", "router")
 
 GRAPH_BUILDER.add_conditional_edges(

@@ -30,7 +30,8 @@ graph TD
     %% Main Flow with MCP
     Start([🚀 Start]) --> MCP{🛡️ MCP Guardrail}
     MCP -- "Noise/Off-topic" --> Reject([🛑 Reject & Notify])
-    MCP -- "Valid Business Case" --> CheckCache{🔍 check_cache}
+    MCP -- "Valid Business Case" --> LoadSkills[📂 load_skills]
+    LoadSkills[📂 load_skills] --> CheckCache{🔍 check_cache}
 
     %% Rest of the flow...
     CheckCache -- "Hit" --> End([🏁 End])
@@ -209,9 +210,10 @@ Important Note: Make sure the placeholders (text, charts, and table formats) in 
 The system follows a **Modular Router-Agent Architecture**:
 
 1. **Governance Layer (MCP Server):** The frontline "Gatekeeper" using the Model Context Protocol. It validates user intent, filters non-business noise.
-2. **Semantic Classifier (Node):** The entry point that decides between Cache, RAG-injection, or Cold Start.
-3. **State-Based Router:** Manages the flow based on semantic distance and classification results.
-4. **Specialized Reasoning Engines (Nodes):**
+2. **System Skills Assembler (load_skills):** Recursively compiles custom Markdown system instructions into graph short-term memory before the LLM fires.
+3. **Semantic Classifier (Node):** The entry point that decides between Cache, RAG-injection, or Cold Start.
+4. **State-Based Router:** Manages the flow based on semantic distance and classification results.
+5. **Specialized Reasoning Engines (Nodes):**
     * **Python Agent:** Optimized for scalable data engineering and ML.
     * **R Agent:** Tailored for advanced statistical modeling and visualization.
     * **VBA Agent:** Focused on MS Office integration and legacy automation.
@@ -287,6 +289,8 @@ This is the fastest way to ensure environment consistency.
     ```
 
 ## 🚦 Key Senior-Level Features
+
+Recursive Prompt Assembly: Built-in resilience via os.walk() parsing for files under /.github/skills, supporting nested structures for advanced runtime skill provisioning.
 
 Semantic Cache Logic: Custom SQL implementation using (azure_embedding <=> %s::vector) for high-performance distance calculation.
 
