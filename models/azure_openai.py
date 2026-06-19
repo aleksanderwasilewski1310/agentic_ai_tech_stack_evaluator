@@ -1,4 +1,6 @@
 """Initiates and returns models from Azure OpenAI Cloud."""
+# pylint: disable=import-error
+# pylint: disable=no-name-in-module
 
 import os
 from langchain_openai.chat_models import AzureChatOpenAI
