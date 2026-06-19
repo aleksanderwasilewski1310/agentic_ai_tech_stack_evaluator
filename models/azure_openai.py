@@ -5,8 +5,7 @@
 import os
 
 # codacy:disable
-from langchain_openai import AzureChatOpenAI  # pylint: disable=unused-import # noqa
-from langchain_openai.chat_models import AzureChatOpenAI  # pylint: disable=unused-import # noqa
+from langchain_openai import AzureChatOpenAI  # noqa
 from langchain_openai.embeddings import AzureOpenAIEmbeddings  # noqa
 
 # codacy:enable

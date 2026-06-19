@@ -3,6 +3,7 @@ Dynamically loads the LLM and Embeddings based on the environment variable.
 Defaults to Azure if no provider is explicitly defined.
 """
 
+# pylint: disable=import-error
 import os
 from dotenv import load_dotenv
 from .azure_openai import get_azure_models
