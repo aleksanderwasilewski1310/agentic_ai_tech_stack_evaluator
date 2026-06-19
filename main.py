@@ -128,6 +128,7 @@ def get_tokens(reply: AIMessage, classifier_type: str):
     return tokens_used
 
 
+# pylint: disable=unused-argument
 def load_skills_node(state: State) -> dict:
     """
     Scans the specified directory for Markdown files (.md),
@@ -138,7 +139,8 @@ def load_skills_node(state: State) -> dict:
     skills_dir = "./.github/skills"
 
     # Base system identity prompt
-    compiled_skills = "You are an elite AI Engineer. You have access to the following specialized skills:\n\n"
+    compiled_skills = """You are an elite AI Engineer.
+                        You have access to the following specialized skills:\n\n"""
 
     # Dynamically assemble prompts by recursively walking through the skills directory
     if os.path.exists(skills_dir):
@@ -149,14 +151,14 @@ def load_skills_node(state: State) -> dict:
                     # os.path.join(root, filename) handles subfolders correctly
                     file_path = os.path.join(root, filename)
                     try:
-                        with open(file_path, "r", encoding="utf-8") as f:
-                            compiled_skills += f.read() + "\n\n"
+                        with open(file_path, "r", encoding="utf-8") as file:
+                            compiled_skills += file.read() + "\n\n"
                         # Log relative path from skills_dir for better readability in logs
                         rel_path = os.path.relpath(file_path, skills_dir)
                         LOGGER.info("Skill file %s loaded successfully", rel_path)
-                    except Exception as e:
+                    except (OSError, UnicodeDecodeError) as error:
                         LOGGER.error(
-                            "Failed to read skill file %s: %s", file_path, str(e)
+                            "Failed to read skill file %s: %s", file_path, str(error)
                         )
     else:
         LOGGER.warning("No folder found at path: %s", skills_dir)

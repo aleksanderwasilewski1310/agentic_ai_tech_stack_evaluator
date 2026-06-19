@@ -63,6 +63,4 @@ Enable auto-update once: open `/plugin`, go to Marketplaces, pick ponytail, Enab
 
 If `/plugin` is not recognized, your Claude Code is out of date. Update it (`npm install -g @anthropic-ai/claude-code@latest`, or `brew upgrade claude-code`) and restart. Other hosts use their own update flow.
 
-## More
-
-Full docs + examples: https://github.com/DietrichGebert/ponytail
+## MoreFull docs + examples: [Ponytail GitHub Repository](https://github.com/DietrichGebert/ponytail) Note
