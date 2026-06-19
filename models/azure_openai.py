@@ -11,14 +11,19 @@ load_dotenv()
 
 
 def get_azure_models():
-    LLM = AzureChatOpenAI(
+    """
+    Initiates and returns models from Azure OpenAI Cloud.
+    Returns:
+        AzureChatOpenAI, AzureOpenAIEmbeddings, string: LLM, EMBEDDINGS_MODEL, "Azure OpenAI"
+    """
+    llm = AzureChatOpenAI(
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
         api_version=os.getenv("OPENAI_API_VERSION"),
         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
     )
 
-    EMBEDDINGS_MODEL = AzureOpenAIEmbeddings(
+    embeddings_model = AzureOpenAIEmbeddings(
         model="text-embedding-3-small",
         azure_deployment=os.getenv("EMBEDDING_DEPLOYMENT_NAME"),
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
@@ -26,4 +31,4 @@ def get_azure_models():
         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
         dimensions=512,
     )
-    return LLM, EMBEDDINGS_MODEL, "Azure OpenAI"
+    return llm, embeddings_model, "Azure OpenAI"
