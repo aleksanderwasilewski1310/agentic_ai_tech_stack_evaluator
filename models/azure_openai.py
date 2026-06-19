@@ -3,8 +3,8 @@
 # pylint: disable=no-name-in-module
 
 import os
-from langchain_openai.chat_models import AzureChatOpenAI
-from langchain_openai.embeddings import AzureOpenAIEmbeddings
+from langchain_openai.chat_models import AzureChatOpenAI  # noqa
+from langchain_openai.embeddings import AzureOpenAIEmbeddings  # noqa
 from dotenv import load_dotenv
 
 load_dotenv()
