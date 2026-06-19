@@ -32,7 +32,7 @@ LOGGER = logging.getLogger("AI-Agent")
 load_dotenv()
 
 LLM, EMBEDDINGS_MODEL, PROVIDER = load_agent_models()
-LOGGER.info("LLM Provider selected: ", PROVIDER)
+LOGGER.info("LLM Provider selected: %s", PROVIDER)
 
 # pylint: disable=too-few-public-methods
 
