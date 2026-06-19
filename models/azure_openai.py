@@ -3,8 +3,13 @@
 # pylint: disable=no-name-in-module
 
 import os
-from langchain_openai.chat_models import AzureChatOpenAI  # noqa
+
+# codacy:disable
+from langchain_openai import AzureChatOpenAI  # pylint: disable=unused-import # noqa
+from langchain_openai.chat_models import AzureChatOpenAI  # pylint: disable=unused-import # noqa
 from langchain_openai.embeddings import AzureOpenAIEmbeddings  # noqa
+
+# codacy:enable
 from dotenv import load_dotenv
 
 load_dotenv()
