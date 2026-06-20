@@ -3,9 +3,9 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/framework-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
-[![Infrastructure](https://img.shields.io/badge/cloud-Azure%20OpenAI-0078d4.svg)](https://azure.microsoft.com/)
+[![Infrastructure](https://img.shields.io/badge/cloud-Azure%20OpenAI%20%7C%20AWS%20Bedrock-orange.svg)](https://aws.amazon.com/bedrock/)
 [![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](https://github.com/aleksanderwasilewski1310/agentic_ai_tech_stack_evaluator/tree/main/.github/workflows)
-[![Docker](https://img.shields.io/badge/container-Docker%20%7C%20AKS%20ready-blue.svg)](https://www.docker.com/)
+[![Docker](https://img.shields.io/badge/container-Docker%20%7C%20AKS%20%7C%20AWS%20ECS%20ready-blue.svg)](https://www.docker.com/)
 
 This project is a production-oriented agentic workflow that helps companies decide **when to keep legacy VBA solutions and when to migrate to modern Python/R stacks**.
 
@@ -197,7 +197,9 @@ Important Note: Make sure the placeholders (text, charts, and table formats) in 
 - **Interface:** `Chainlit` – Asynchronous, production-grade UI for real-time agentic reasoning and Mermaid-based workflow visualization.
 - **API Layer:** `FastAPI` – High-performance RESTful interface for headless integration and microservices orchestration.
 - **Validation:** `Pydantic v2` for Strict Structured Output and Type Safety
-- **LLM:** `AzureChatOpenAI` (Integrated via **Poland Central** region for minimal latency)
+- **LLM Providers (Multi-Cloud Ready):**
+    AzureChatOpenAI (Integrated via Poland Central region for minimal latency)
+    Amazon Bedrock (Supporting Anthropic Claude 3.5 Sonnet for advanced agentic reasoning and complex coding tasks)
 - **Vector Database:** `PostgreSQL` with `pgvector` – Custom-built hybrid storage for persistent semantic memory, featuring HNSW indexing for high-performance      similarity searches.
 - **Embeddings:** `AzureOpenAIEmbeddings` (`text-embedding-3-small`) – High-dimensional semantic representation (512-dim) for multi-language query alignment.
 - **Containerization:** `Docker` & `Docker Compose` for environment parity.
@@ -302,7 +304,7 @@ Environment Parity: Multi-container setup (App + DB) ensures the system works id
 
 To transition this system into a highly scalable, production-grade enterprise platform, the following architectural milestones are planned:
 
-* **Production Deployment via Azure Container Apps (ACA) / AKS:** Migrating the current multi-container setup to managed cloud environments (Azure Container Apps for serverless scaling or Azure Kubernetes Service for full orchestration) to ensure high availability and auto-scaling.
+* **Production Deployment via AWS ECS / Azure Container Apps:** Full cloud infrastructure blueprints supporting multi-container setup in managed environments, featuring seamless migration routes for both **Azure Kubernetes Service (AKS)** and **AWS ECS Express Mode (Fargate)** with automated HTTPS certificate provisioning.
 * **Observability & LLM Tracing:** Integrating open-source tools like **Langfuse** or **Arize Phoenix** alongside **Prometheus and Grafana** to track agentic trajectories, latency, semantic cache hit rates, and real-time token cost allocation.
 * **Async Event-Driven Evaluation:** Moving from synchronous API calls to an asynchronous architecture using **Azure Service Bus** or **RabbitMQ** to handle heavy batch evaluation workloads without blocking the primary agent.
 * **Expanded Evaluation Engines:** Developing specialized evaluators for deeper code structural analysis, security vulnerability scanning, and performance profiling of the generated Python/R code.
